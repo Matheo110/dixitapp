@@ -199,73 +199,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Collect link */}
-        {user && (
-          <div
-            className="bg-white mb-8"
-            style={{
-              borderLeft: '3px solid #C8102E',
-              borderRadius: '8px',
-              padding: '1.5rem',
-            }}
-          >
-            <h3
-              className="font-display font-semibold text-lg mb-4"
-              style={{ color: '#1B2B5E' }}
-            >
-              Mon lien de collecte
-            </h3>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <input
-                readOnly
-                value={`${window.location.origin}/collect/${user.id}`}
-                className="flex-1 text-xs px-3 py-3 rounded-xl outline-none truncate"
-                style={{
-                  backgroundColor: '#F5F0E8',
-                  color: 'rgba(27,43,94,0.7)',
-                  border: '1px solid rgba(27,43,94,0.12)',
-                }}
-                onFocus={e => e.target.select()}
-              />
-
-              <div className="flex gap-2 shrink-0">
-                <button
-                  onClick={copyCollectLink}
-                  className="flex-1 sm:flex-none text-xs font-semibold px-4 py-3 rounded-xl transition-all whitespace-nowrap"
-                  style={
-                    copied
-                      ? { backgroundColor: 'rgba(27,43,94,0.12)', color: '#1B2B5E' }
-                      : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }
-                  }
-                >
-                  {copied ? 'Lien copié !' : 'Copier le lien'}
-                </button>
-
-                <button
-                  onClick={openWall}
-                  className="flex-1 sm:flex-none text-xs font-semibold px-4 py-3 rounded-xl transition-all whitespace-nowrap"
-                  style={{
-                    backgroundColor: '#ffffff',
-                    color: '#C8102E',
-                    border: '1.5px solid #C8102E',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.backgroundColor = '#C8102E'
-                    e.currentTarget.style.color = '#ffffff'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.backgroundColor = '#ffffff'
-                    e.currentTarget.style.color = '#C8102E'
-                  }}
-                >
-                  Voir mon mur public
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Invite section */}
         <div className="bg-white mb-8 rounded-2xl" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
           <div className="p-6">
@@ -300,6 +233,15 @@ export default function Dashboard() {
               >
                 {inviteLoading ? 'Génération…' : 'Générer le lien'}
               </button>
+              <button
+                onClick={() => user && window.open(`${window.location.origin}/wall/${user.id}`, '_blank')}
+                className="px-5 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all"
+                style={{ backgroundColor: '#ffffff', border: '1.5px solid #1B2B5E', color: '#1B2B5E' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1B2B5E'; e.currentTarget.style.color = '#F5F0E8' }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; e.currentTarget.style.color = '#1B2B5E' }}
+              >
+                Voir mon mur public
+              </button>
             </div>
 
             {inviteError && (
@@ -322,13 +264,13 @@ export default function Dashboard() {
               </div>
             )}
 
-            {invitations.length > 0 && (
+            {invitations.filter(inv => !inv.used).length > 0 && (
               <div>
                 <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'rgba(27,43,94,0.4)' }}>
                   Liens envoyés
                 </p>
                 <div className="space-y-2">
-                  {invitations.map(inv => {
+                  {invitations.filter(inv => !inv.used).map(inv => {
                     const link = `${window.location.origin}/collect/${inv.token}`
                     return (
                       <div key={inv.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ backgroundColor: '#F5F0E8' }}>
