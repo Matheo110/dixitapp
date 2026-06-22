@@ -96,13 +96,12 @@ export default function Pricing() {
               <div
                 key={plan.key}
                 className="bg-white rounded-2xl p-7 flex flex-col"
-                style={plan.featured ? {
-                  border: '2px solid #C8102E',
-                  boxShadow: '0 4px 24px rgba(200,16,46,0.12)',
+                style={{
+                  border: plan.featured ? '2px solid #C8102E' : '1px solid rgba(27,43,94,0.1)',
+                  boxShadow: plan.featured ? '0 4px 24px rgba(200,16,46,0.12)' : 'none',
                   transition: 'all 0.3s ease',
-                } : {
-                  border: '1px solid rgba(27,43,94,0.1)',
-                  transition: 'all 0.3s ease',
+                  transform: 'translateY(0)',
+                  cursor: 'pointer',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-8px)'
