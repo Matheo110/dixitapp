@@ -7,19 +7,19 @@ import Navbar from '../components/Navbar'
 async function getOrCreateProfile(user) {
   const { data } = await supabase
     .from('profiles')
-    .select('slug')
+    .select('slug, is_beta, beta_expires_at, plan')
     .eq('id', user.id)
     .single()
 
-  if (data) return data.slug
+  if (data) return data
 
   const firstName = user.user_metadata?.first_name || user.email.split('@')[0]
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const slug = generateSlug(firstName)
     const { error } = await supabase.from('profiles').insert({ id: user.id, slug })
-    if (!error) return slug
-    if (error.code !== '23505') break // not a unique-constraint collision
+    if (!error) return { slug, is_beta: false, beta_expires_at: null, plan: 'free' }
+    if (error.code !== '23505') break
   }
 
   return null
@@ -34,6 +34,7 @@ const TABS = [
 export default function Dashboard() {
   const [user, setUser] = useState(null)
   const [slug, setSlug] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [testimonials, setTestimonials] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('all')
@@ -53,7 +54,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) return
-    getOrCreateProfile(user).then(setSlug)
+    getOrCreateProfile(user).then(p => {
+      setSlug(p?.slug || null)
+      setProfile(p)
+    })
   }, [user])
 
   const fetchTestimonials = useCallback(async () => {
@@ -152,15 +156,26 @@ export default function Dashboard() {
   const firstName = user?.user_metadata?.first_name
 
   const navRight = (
-    <button
-      onClick={handleLogout}
-      className="text-sm font-medium transition-colors"
-      style={{ color: 'rgba(255,255,255,0.65)' }}
-      onMouseEnter={e => (e.target.style.color = '#ffffff')}
-      onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
-    >
-      Déconnexion
-    </button>
+    <div className="flex items-center gap-5">
+      <a
+        href="/pricing"
+        className="text-sm font-medium transition-colors"
+        style={{ color: 'rgba(255,255,255,0.65)' }}
+        onMouseEnter={e => (e.target.style.color = '#ffffff')}
+        onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
+      >
+        Voir les plans
+      </a>
+      <button
+        onClick={handleLogout}
+        className="text-sm font-medium transition-colors"
+        style={{ color: 'rgba(255,255,255,0.65)' }}
+        onMouseEnter={e => (e.target.style.color = '#ffffff')}
+        onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
+      >
+        Déconnexion
+      </button>
+    </div>
   )
 
   return (
@@ -176,6 +191,21 @@ export default function Dashboard() {
         >
           Bonjour{firstName ? `, ${firstName}` : ''} 👋
         </h2>
+
+        {/* Beta banner */}
+        {profile?.is_beta && (
+          <div
+            className="mb-6 px-4 py-3 rounded-xl"
+            style={{ backgroundColor: '#F0F4FF', borderLeft: '3px solid #1B2B5E' }}
+          >
+            <p className="text-sm" style={{ color: '#1B2B5E' }}>
+              Vous êtes en période bêta gratuite jusqu'au 1er août 2026.{' '}
+              <a href="/pricing" className="font-semibold" style={{ color: '#C8102E' }}>
+                Découvrez nos plans →
+              </a>
+            </p>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
