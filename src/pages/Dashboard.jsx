@@ -124,6 +124,12 @@ export default function Dashboard() {
     setInviteLoading(false)
   }
 
+  const deleteInvitation = async (id) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce lien ?')) return
+    await supabase.from('invitations').delete().eq('id', id)
+    setInvitations(prev => prev.filter(inv => inv.id !== id))
+  }
+
   const copyCollectLink = () => {
     if (!user) return
     navigator.clipboard.writeText(`${window.location.origin}/collect/${user.id}`)
@@ -326,6 +332,13 @@ export default function Dashboard() {
                             : { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }}
                         >
                           {copiedInvite === inv.id ? 'Copié !' : 'Copier'}
+                        </button>
+                        <button
+                          onClick={() => deleteInvitation(inv.id)}
+                          className="text-xs px-2.5 py-1.5 rounded-lg shrink-0 transition-all"
+                          style={{ backgroundColor: 'transparent', border: '1px solid #C8102E', color: '#C8102E' }}
+                        >
+                          Supprimer
                         </button>
                       </div>
                     )
