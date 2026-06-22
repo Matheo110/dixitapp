@@ -38,6 +38,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('all')
   const [copied, setCopied] = useState(false)
+  const [invitations, setInvitations] = useState([])
+  const [clientName, setClientName] = useState('')
+  const [clientEmail, setClientEmail] = useState('')
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError, setInviteError] = useState(null)
+  const [newInviteLink, setNewInviteLink] = useState(null)
+  const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -63,6 +70,18 @@ export default function Dashboard() {
 
   useEffect(() => { fetchTestimonials() }, [fetchTestimonials])
 
+  const fetchInvitations = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    setInvitations(data || [])
+  }, [user])
+
+  useEffect(() => { fetchInvitations() }, [fetchInvitations])
+
   const handleApprove = async (id, currentlyApproved) => {
     const next = !currentlyApproved
     await supabase.from('testimonials').update({ approved: next }).eq('id', id)
@@ -72,6 +91,33 @@ export default function Dashboard() {
   const handleReject = async (id) => {
     await supabase.from('testimonials').delete().eq('id', id)
     setTestimonials(prev => prev.filter(t => t.id !== id))
+  }
+
+  const createInvitation = async () => {
+    if (!user) return
+    setInviteLoading(true)
+    setInviteError(null)
+    setNewInviteLink(null)
+    const { data, error } = await supabase
+      .from('invitations')
+      .insert({
+        user_id: user.id,
+        client_name: clientName.trim() || null,
+        client_email: clientEmail.trim() || null,
+      })
+      .select()
+      .single()
+    if (error) {
+      setInviteError(`Erreur : ${error.message}`)
+    } else {
+      const link = `${window.location.origin}/collect/${data.token}`
+      setNewInviteLink(link)
+      setCopiedInvite(null)
+      setClientName('')
+      setClientEmail('')
+      setInvitations(prev => [data, ...prev])
+    }
+    setInviteLoading(false)
   }
 
   const copyCollectLink = () => {
@@ -219,6 +265,104 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Invite section */}
+        <div className="bg-white mb-8 rounded-2xl" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+          <div className="p-6">
+            <h3 className="font-display font-semibold text-lg mb-4" style={{ color: '#1B2B5E' }}>
+              Inviter un client
+            </h3>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-3">
+              <input
+                type="text"
+                value={clientName}
+                onChange={e => setClientName(e.target.value)}
+                placeholder="Prénom du client"
+                className="flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
+              />
+              <input
+                type="email"
+                value={clientEmail}
+                onChange={e => setClientEmail(e.target.value)}
+                placeholder="Email du client"
+                className="flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
+              />
+              <button
+                onClick={createInvitation}
+                disabled={inviteLoading}
+                className="px-5 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#C8102E', color: '#ffffff' }}
+                onMouseEnter={e => !inviteLoading && (e.currentTarget.style.backgroundColor = '#a80d26')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
+              >
+                {inviteLoading ? 'Génération…' : 'Générer le lien'}
+              </button>
+            </div>
+
+            {inviteError && (
+              <p className="text-sm mb-3" style={{ color: '#C8102E' }}>{inviteError}</p>
+            )}
+
+            {newInviteLink && (
+              <div
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-4"
+                style={{ backgroundColor: '#F0F4FF', border: '1px solid rgba(27,43,94,0.12)' }}
+              >
+                <span className="flex-1 text-xs truncate" style={{ color: '#1B2B5E' }}>{newInviteLink}</span>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(newInviteLink); setCopiedInvite('new'); setTimeout(() => setCopiedInvite(null), 2000) }}
+                  className="text-xs px-3 py-1.5 rounded-lg shrink-0 transition-all"
+                  style={copiedInvite === 'new' ? { backgroundColor: 'rgba(27,43,94,0.12)', color: '#1B2B5E' } : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
+                >
+                  {copiedInvite === 'new' ? 'Copié !' : 'Copier'}
+                </button>
+              </div>
+            )}
+
+            {invitations.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'rgba(27,43,94,0.4)' }}>
+                  Liens envoyés
+                </p>
+                <div className="space-y-2">
+                  {invitations.map(inv => {
+                    const link = `${window.location.origin}/collect/${inv.token}`
+                    return (
+                      <div key={inv.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ backgroundColor: '#F5F0E8' }}>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium" style={{ color: '#1B2B5E' }}>
+                            {inv.client_name || inv.client_email || 'Lien sans nom'}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: 'rgba(27,43,94,0.4)' }}>{link}</p>
+                        </div>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
+                          style={inv.used
+                            ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }
+                            : { backgroundColor: 'rgba(200,16,46,0.1)', color: '#C8102E' }}
+                        >
+                          {inv.used ? 'Utilisé' : 'En attente'}
+                        </span>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(link); setCopiedInvite(inv.id); setTimeout(() => setCopiedInvite(null), 2000) }}
+                          className="text-xs px-2.5 py-1.5 rounded-lg shrink-0 transition-all"
+                          style={copiedInvite === inv.id
+                            ? { backgroundColor: 'rgba(27,43,94,0.12)', color: '#1B2B5E' }
+                            : { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }}
+                        >
+                          {copiedInvite === inv.id ? 'Copié !' : 'Copier'}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Testimonials list */}
         <div>

@@ -14,7 +14,7 @@ const onFocus = e => (e.target.style.borderColor = 'rgba(27,43,94,0.5)')
 const onBlur  = e => (e.target.style.borderColor = 'rgba(27,43,94,0.2)')
 
 export default function Collect() {
-  const { slug: ownerId } = useParams()
+  const { slug: token } = useParams()
 
   // Mode: null | 'text' | 'video'
   const [mode, setMode] = useState(null)
@@ -31,10 +31,29 @@ export default function Collect() {
   const mediaRecorderRef = useRef(null)
   const streamRef = useRef(null)
 
+  // Invitation
+  const [invitation, setInvitation] = useState(null)
+  const [inviteLoading, setInviteLoading] = useState(true)
+  const [invalidLink, setInvalidLink] = useState(false)
+
   // Common
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    supabase
+      .from('invitations')
+      .select('*')
+      .eq('token', token)
+      .eq('used', false)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) setInvalidLink(true)
+        else setInvitation(data)
+        setInviteLoading(false)
+      })
+  }, [token])
 
   useEffect(() => {
     return () => {
@@ -100,7 +119,7 @@ export default function Collect() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!ownerId || !mode) return
+    if (!invitation || !mode) return
 
     const name = (mode === 'text' ? form.name : videoName).trim()
     if (!name) { setError('Veuillez saisir votre prénom.'); return }
@@ -136,7 +155,7 @@ export default function Collect() {
     }
 
     const payload = {
-      user_id: ownerId,
+      user_id: invitation.user_id,
       name,
       company: null,
       role: null,
@@ -152,8 +171,38 @@ export default function Collect() {
       setError(`Erreur : ${error.message}`)
       setLoading(false)
     } else {
+      await supabase.from('invitations').update({ used: true }).eq('token', token)
       setSubmitted(true)
     }
+  }
+
+  if (inviteLoading) {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm" style={{ color: 'rgba(27,43,94,0.45)' }}>Chargement…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (invalidLink) {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center max-w-sm">
+            <h2 className="font-display font-bold text-2xl mb-3" style={{ color: '#1B2B5E' }}>
+              Lien invalide
+            </h2>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(27,43,94,0.55)' }}>
+              Ce lien est invalide ou a déjà été utilisé.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (submitted) {
