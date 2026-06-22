@@ -43,7 +43,7 @@ export default function Pricing() {
 
   const handleCheckout = async (plan) => {
     if (!plan.priceId) {
-      navigate('/')
+      navigate('/login')
       return
     }
     setLoading(plan.key)

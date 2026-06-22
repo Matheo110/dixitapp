@@ -51,7 +51,7 @@ export default function ResetPassword() {
     if (error) setError(error.message)
     else {
       setSuccess(true)
-      setTimeout(() => navigate('/'), 2000)
+      setTimeout(() => navigate('/dashboard'), 2000)
     }
   }
 

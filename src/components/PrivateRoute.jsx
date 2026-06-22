@@ -11,12 +11,12 @@ export default function PrivateRoute({ children }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
-      if (!session) navigate('/', { replace: true })
+      if (!session) navigate('/login', { replace: true })
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
-      if (!session) navigate('/', { replace: true })
+      if (!session) navigate('/login', { replace: true })
     })
 
     return () => subscription.unsubscribe()
