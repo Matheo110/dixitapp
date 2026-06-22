@@ -99,8 +99,22 @@ export default function Pricing() {
                 style={plan.featured ? {
                   border: '2px solid #C8102E',
                   boxShadow: '0 4px 24px rgba(200,16,46,0.12)',
+                  transition: 'all 0.3s ease',
                 } : {
                   border: '1px solid rgba(27,43,94,0.1)',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-8px)'
+                  e.currentTarget.style.boxShadow = plan.featured
+                    ? '0 12px 40px rgba(200,16,46,0.2)'
+                    : '0 12px 40px rgba(27,43,94,0.15)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = plan.featured
+                    ? '0 4px 24px rgba(200,16,46,0.12)'
+                    : 'none'
                 }}
               >
                 {plan.featured && (
