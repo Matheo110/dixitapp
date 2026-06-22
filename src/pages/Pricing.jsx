@@ -98,7 +98,7 @@ export default function Pricing() {
                 className="bg-white rounded-2xl p-7 flex flex-col"
                 style={{
                   border: '1px solid #E0D8CC',
-                  boxShadow: plan.featured ? '0 4px 24px rgba(27,43,94,0.12)' : 'none',
+                  boxShadow: 'none',
                   transition: 'all 0.3s ease',
                   transform: 'translateY(0)',
                   cursor: 'pointer',
@@ -112,7 +112,7 @@ export default function Pricing() {
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = plan.featured ? '0 4px 24px rgba(27,43,94,0.08)' : 'none'
+                  e.currentTarget.style.boxShadow = 'none'
                   e.currentTarget.style.outline = 'none'
                 }}
               >
