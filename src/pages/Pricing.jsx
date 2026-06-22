@@ -70,6 +70,13 @@ export default function Pricing() {
       <div className="flex-1 py-16 px-4">
         <div className="max-w-5xl mx-auto">
 
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{ background: 'none', border: 'none', color: '#1B2B5E', fontSize: '0.85rem', cursor: 'pointer', padding: 0, marginBottom: '2rem', display: 'inline-block' }}
+          >
+            ← Retour au dashboard
+          </button>
+
           <div className="text-center mb-12">
             <h1 className="font-display font-bold text-4xl mb-4" style={{ color: '#1B2B5E' }}>
               Choisissez votre plan
