@@ -97,23 +97,21 @@ export default function Pricing() {
                 key={plan.key}
                 className="bg-white rounded-2xl p-7 flex flex-col"
                 style={{
-                  border: plan.featured ? '2px solid #C8102E' : '1px solid rgba(27,43,94,0.1)',
-                  boxShadow: plan.featured ? '0 4px 24px rgba(200,16,46,0.12)' : 'none',
+                  border: plan.featured ? '2px solid #1B2B5E' : '1px solid #E0D8CC',
+                  boxShadow: plan.featured ? '0 4px 24px rgba(27,43,94,0.12)' : 'none',
                   transition: 'all 0.3s ease',
                   transform: 'translateY(0)',
                   cursor: 'pointer',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-8px)'
-                  e.currentTarget.style.boxShadow = plan.featured
-                    ? '0 12px 40px rgba(200,16,46,0.2)'
-                    : '0 12px 40px rgba(27,43,94,0.15)'
+                  e.currentTarget.style.border = '2px solid #1B2B5E'
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(27,43,94,0.15)'
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = plan.featured
-                    ? '0 4px 24px rgba(200,16,46,0.12)'
-                    : 'none'
+                  e.currentTarget.style.border = plan.featured ? '2px solid #1B2B5E' : '1px solid #E0D8CC'
+                  e.currentTarget.style.boxShadow = plan.featured ? '0 4px 24px rgba(27,43,94,0.12)' : 'none'
                 }}
               >
                 {plan.featured && (
