@@ -361,16 +361,34 @@ export default function Profile() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', border: 'none', cursor: 'pointer' }}
-              onMouseEnter={e => !saving && (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={e => !saving && (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setWallBgColor('#F5F0E8')
+                  setWallPrimaryColor('#1B2B5E')
+                  setWallAccentColor('#C8102E')
+                  setWallFont('Playfair Display')
+                  setWallTitle('Témoignages de nos clients')
+                  setWallLayout('grid')
+                }}
+                style={{ background: 'transparent', border: '1px solid #888', color: '#888', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#555' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#888'; e.currentTarget.style.color = '#888' }}
+              >
+                Réinitialiser les couleurs par défaut
+              </button>
+            </div>
 
           </form>
         </div>
