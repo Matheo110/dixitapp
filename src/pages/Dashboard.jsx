@@ -42,8 +42,10 @@ export default function Dashboard() {
   const [invitations, setInvitations] = useState([])
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
+  const [inviteMessage, setInviteMessage] = useState('')
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteError, setInviteError] = useState(null)
+  const [inviteSent, setInviteSent] = useState(null)
   const [newInviteLink, setNewInviteLink] = useState(null)
   const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
@@ -102,6 +104,8 @@ export default function Dashboard() {
     setInviteLoading(true)
     setInviteError(null)
     setNewInviteLink(null)
+    setInviteSent(null)
+
     const { data, error } = await supabase
       .from('invitations')
       .insert({
@@ -111,14 +115,35 @@ export default function Dashboard() {
       })
       .select()
       .single()
+
     if (error) {
       setInviteError(`Erreur : ${error.message}`)
     } else {
       const link = `${window.location.origin}/collect/${data.token}`
       setNewInviteLink(link)
       setCopiedInvite(null)
+
+      const emailTarget = clientEmail.trim()
+      if (emailTarget) {
+        const { error: emailError } = await supabase.functions.invoke('send-invite', {
+          body: {
+            client_email: emailTarget,
+            client_name: clientName.trim() || null,
+            collect_link: link,
+            custom_message: inviteMessage.trim() || null,
+            owner_name: user.user_metadata?.first_name || 'Dixitapp',
+          },
+        })
+        if (emailError) {
+          setInviteError(`Lien créé, mais erreur d'envoi : ${emailError.message}`)
+        } else {
+          setInviteSent(emailTarget)
+        }
+      }
+
       setClientName('')
       setClientEmail('')
+      setInviteMessage('')
       setInvitations(prev => [data, ...prev])
     }
     setInviteLoading(false)
@@ -268,10 +293,27 @@ export default function Dashboard() {
                 className="flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
               />
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'rgba(27,43,94,0.55)' }}>
+                Message personnalisé <span style={{ fontWeight: 400 }}>(optionnel)</span>
+              </label>
+              <textarea
+                value={inviteMessage}
+                onChange={e => setInviteMessage(e.target.value)}
+                rows={3}
+                placeholder="Bonjour [Prénom], je serais ravi d'avoir votre avis sur notre collaboration. Cela ne prendra que 2 minutes !"
+                className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all resize-none"
+                style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-3">
               <button
                 onClick={createInvitation}
                 disabled={inviteLoading}
-                className="px-5 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-5 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#C8102E', color: '#ffffff' }}
                 onMouseEnter={e => !inviteLoading && (e.currentTarget.style.backgroundColor = '#a80d26')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
@@ -291,6 +333,12 @@ export default function Dashboard() {
 
             {inviteError && (
               <p className="text-sm mb-3" style={{ color: '#C8102E' }}>{inviteError}</p>
+            )}
+
+            {inviteSent && (
+              <p className="text-sm mb-3 font-medium" style={{ color: '#1B2B5E' }}>
+                Invitation envoyée à {inviteSent} ✓
+              </p>
             )}
 
             {newInviteLink && (
