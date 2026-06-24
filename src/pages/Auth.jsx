@@ -88,7 +88,7 @@ export default function Auth() {
       })
       if (error) { setError(error.message); setLoading(false) }
       else {
-        if (data?.user && (firstName.trim() || signupCompany.trim())) {
+        if (data?.user) {
           await supabase.from('profiles').upsert({
             id: data.user.id,
             firstname: firstName.trim() || null,

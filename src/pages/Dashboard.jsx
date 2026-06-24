@@ -11,18 +11,29 @@ async function getOrCreateProfile(user) {
     .eq('id', user.id)
     .single()
 
-  if (data) return data
+  // Profile exists and already has a slug — nothing to do
+  if (data?.slug) return data
 
-  const firstName = user.user_metadata?.first_name || user.email.split('@')[0]
+  // Determine best name for slug generation
+  const nameForSlug = data?.firstname || user.user_metadata?.first_name || user.email.split('@')[0]
 
   for (let attempt = 0; attempt < 5; attempt++) {
-    const slug = generateSlug(firstName)
-    const { error } = await supabase.from('profiles').insert({ id: user.id, slug })
-    if (!error) return { slug, is_beta: false, beta_expires_at: null, plan: 'free' }
-    if (error.code !== '23505') break
+    const slug = generateSlug(nameForSlug)
+
+    if (data) {
+      // Profile exists (created during signup) but has no slug yet — just add the slug
+      const { error } = await supabase.from('profiles').update({ slug }).eq('id', user.id)
+      if (!error) return { ...data, slug }
+      if (error.code !== '23505') break
+    } else {
+      // No profile at all — insert fresh
+      const { error } = await supabase.from('profiles').insert({ id: user.id, slug })
+      if (!error) return { slug, is_beta: false, beta_expires_at: null, plan: 'free' }
+      if (error.code !== '23505') break
+    }
   }
 
-  return null
+  return data || null
 }
 
 const TABS = [
