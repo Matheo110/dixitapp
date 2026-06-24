@@ -51,8 +51,8 @@ Deno.serve(async (req) => {
         </p>
 
         <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center;">
-          <p style="color: #bbb; font-size: 11px; margin: 0;">
-            Propulsé par <span style="font-family: Georgia, serif; font-weight: 600; color: #aaa;">Dixitapp</span>
+          <p style="color: #d0d0d0; font-size: 10px; margin: 0; letter-spacing: 0.03em;">
+            Propulsé par Dixitapp
           </p>
         </div>
       </div>

@@ -131,7 +131,7 @@ export default function Dashboard() {
             client_name: clientName.trim() || null,
             collect_link: link,
             custom_message: inviteMessage.trim() || null,
-            owner_name: user.user_metadata?.first_name || 'Dixitapp',
+            owner_name: profile?.company || profile?.firstname || user.user_metadata?.first_name || user.email,
           },
         })
         if (emailError) {
