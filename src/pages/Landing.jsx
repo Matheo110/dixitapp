@@ -98,12 +98,17 @@ export default function Landing() {
       <section style={{ backgroundColor: '#F5F0E8', padding: '6rem 1.5rem' }}>
         <div style={{ maxWidth: '780px', margin: '0 auto', textAlign: 'center' }}>
           <h1
-            style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '3rem', color: '#1B2B5E', lineHeight: 1.18, marginBottom: '1.5rem' }}
+            style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '3.5rem', color: '#1B2B5E', lineHeight: 1.15, marginBottom: '1rem' }}
           >
-            Vos clients témoignent.<br />Automatiquement.
+            Bienvenue sur Dixitapp
           </h1>
           <p
-            style={{ fontSize: '1rem', color: '#555', lineHeight: 1.7, maxWidth: '560px', margin: '0 auto 2.5rem' }}
+            style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.5rem', color: '#1B2B5E', lineHeight: 1.35, marginBottom: '1.25rem' }}
+          >
+            Vos clients témoignent. Automatiquement.
+          </p>
+          <p
+            style={{ fontSize: '0.9rem', color: '#888', lineHeight: 1.7, maxWidth: '560px', margin: '0 auto 2.5rem' }}
           >
             Collectez des avis vidéo et texte en un lien unique. Affichez-les sur votre site en quelques secondes. Sans relances, sans friction.
           </p>
