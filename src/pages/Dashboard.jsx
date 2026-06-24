@@ -318,7 +318,7 @@ export default function Dashboard() {
                 onMouseEnter={e => !inviteLoading && (e.currentTarget.style.backgroundColor = '#a80d26')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
               >
-                {inviteLoading ? 'Génération…' : 'Générer le lien'}
+                {inviteLoading ? 'Génération…' : clientEmail ? "Générer et envoyer l'invitation" : 'Générer le lien'}
               </button>
               <button
                 onClick={() => user && window.open(`${window.location.origin}/wall/${user.id}`, '_blank')}

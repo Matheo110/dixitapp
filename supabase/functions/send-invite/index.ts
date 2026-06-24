@@ -18,13 +18,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const brevoKey = Deno.env.get('BREVO_API_KEY')
-    if (!brevoKey) {
-      return new Response(JSON.stringify({ error: 'BREVO_API_KEY not configured' }), {
-        status: 500,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
-      })
-    }
+    const brevoKey = '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'
 
     const senderName = owner_name || 'Dixitapp'
     const greeting = client_name ? `Bonjour ${client_name},` : 'Bonjour,'
