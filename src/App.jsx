@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
 import Collect from './pages/Collect'
 import Wall from './pages/Wall'
 import ResetPassword from './pages/ResetPassword'
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Auth />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/collect/:slug" element={<Collect />} />
         <Route path="/wall/:slug" element={<Wall />} />
         <Route path="/reset-password" element={<ResetPassword />} />

@@ -35,6 +35,7 @@ export default function Collect() {
   const [invitation, setInvitation] = useState(null)
   const [inviteLoading, setInviteLoading] = useState(true)
   const [invalidLink, setInvalidLink] = useState(false)
+  const [ownerProfile, setOwnerProfile] = useState(null)
 
   // Common
   const [loading, setLoading] = useState(false)
@@ -48,9 +49,15 @@ export default function Collect() {
       .eq('token', token)
       .eq('used', false)
       .single()
-      .then(({ data, error }) => {
-        if (error || !data) setInvalidLink(true)
-        else setInvitation(data)
+      .then(async ({ data, error }) => {
+        if (error || !data) { setInvalidLink(true); setInviteLoading(false); return }
+        setInvitation(data)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('firstname, company, activity, custom_message, avatar_url')
+          .eq('id', data.user_id)
+          .single()
+        setOwnerProfile(profile)
         setInviteLoading(false)
       })
   }, [token])
@@ -240,6 +247,28 @@ export default function Collect() {
 
           {/* Hero */}
           <div className="text-center mb-10">
+            {ownerProfile?.avatar_url && (
+              <img
+                src={ownerProfile.avatar_url}
+                alt=""
+                style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 1rem', border: '2px solid rgba(27,43,94,0.15)' }}
+                onError={e => (e.currentTarget.style.display = 'none')}
+              />
+            )}
+            {(ownerProfile?.company || ownerProfile?.activity) && (
+              <div className="mb-2">
+                {ownerProfile.company && (
+                  <p className="font-display font-semibold text-lg" style={{ color: '#1B2B5E' }}>
+                    {ownerProfile.company}
+                  </p>
+                )}
+                {ownerProfile.activity && (
+                  <p className="text-sm" style={{ color: 'rgba(27,43,94,0.5)' }}>
+                    {ownerProfile.activity}
+                  </p>
+                )}
+              </div>
+            )}
             <h1
               className="font-display font-bold leading-tight mb-3"
               style={{ color: '#1B2B5E', fontSize: '2.5rem' }}
@@ -247,7 +276,7 @@ export default function Collect() {
               Partagez votre expérience
             </h1>
             <p className="text-sm" style={{ color: 'rgba(27,43,94,0.5)' }}>
-              Votre avis compte. Merci de prendre 2 minutes.
+              {ownerProfile?.custom_message || 'Votre avis compte. Merci de prendre 2 minutes.'}
             </p>
             <div className="mx-auto mt-5 rounded-full" style={{ width: 40, height: 3, backgroundColor: '#C8102E' }} />
           </div>

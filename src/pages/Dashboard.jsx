@@ -164,6 +164,15 @@ export default function Dashboard() {
   const navRight = (
     <div className="flex items-center gap-5">
       <a
+        href="/profile"
+        className="text-sm font-medium transition-colors"
+        style={{ color: 'rgba(255,255,255,0.65)' }}
+        onMouseEnter={e => (e.target.style.color = '#ffffff')}
+        onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
+      >
+        Mon profil
+      </a>
+      <a
         href="/pricing"
         className="text-sm font-medium transition-colors"
         style={{ color: 'rgba(255,255,255,0.65)' }}
