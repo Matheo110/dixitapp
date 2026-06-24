@@ -39,6 +39,7 @@ export default function Auth() {
 
   // Login / signup state
   const [firstName, setFirstName] = useState('')
+  const [signupCompany, setSignupCompany] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -80,13 +81,20 @@ export default function Auth() {
       else navigate('/dashboard', { replace: true })
 
     } else if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { first_name: firstName.trim() } },
       })
       if (error) { setError(error.message); setLoading(false) }
       else {
+        if (data?.user && (firstName.trim() || signupCompany.trim())) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            firstname: firstName.trim() || null,
+            company: signupCompany.trim() || null,
+          })
+        }
         setMessage('Vérifiez votre email pour confirmer votre compte, puis connectez-vous.')
         setLoading(false)
       }
@@ -181,22 +189,41 @@ export default function Auth() {
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {mode === 'signup' && (
-                      <div>
-                        <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                          Prénom
-                        </label>
-                        <input
-                          type="text"
-                          value={firstName}
-                          onChange={e => setFirstName(e.target.value)}
-                          placeholder="Prénom"
-                          autoComplete="given-name"
-                          className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-                          style={inputStyle}
-                          onFocus={onFocus}
-                          onBlur={onBlur}
-                        />
-                      </div>
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
+                            Prénom
+                          </label>
+                          <input
+                            type="text"
+                            value={firstName}
+                            onChange={e => setFirstName(e.target.value)}
+                            placeholder="Prénom"
+                            autoComplete="given-name"
+                            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                            style={inputStyle}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
+                            Nom de votre entreprise{' '}
+                            <span className="font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>(optionnel)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={signupCompany}
+                            onChange={e => setSignupCompany(e.target.value)}
+                            placeholder="Mon Entreprise"
+                            autoComplete="organization"
+                            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                            style={inputStyle}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                          />
+                        </div>
+                      </>
                     )}
 
                     <div>
