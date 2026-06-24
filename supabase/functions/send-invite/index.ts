@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 24px; background: #ffffff;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <span style="font-family: Georgia, serif; font-weight: 700; font-size: 22px; letter-spacing: 0.12em; color: #1B2B5E; text-transform: uppercase;">DIXITAPP</span>
+          <span style="font-family: Georgia, serif; font-weight: 700; font-size: 22px; letter-spacing: 0.12em; color: #1B2B5E; text-transform: uppercase;">${senderName}</span>
         </div>
 
         <p style="color: #333; font-size: 15px; line-height: 1.6; margin-bottom: 8px;">${greeting}</p>
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
         <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center;">
           <p style="color: #d0d0d0; font-size: 10px; margin: 0; letter-spacing: 0.03em;">
-            Propulsé par Dixitapp
+            Propulsé par ${senderName}
           </p>
         </div>
       </div>

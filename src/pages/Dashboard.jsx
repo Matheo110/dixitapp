@@ -125,13 +125,14 @@ export default function Dashboard() {
 
       const emailTarget = clientEmail.trim()
       if (emailTarget) {
+        console.log('owner_name being sent:', profile?.company, profile?.firstname)
         const { error: emailError } = await supabase.functions.invoke('send-invite', {
           body: {
             client_email: emailTarget,
             client_name: clientName.trim() || null,
             collect_link: link,
             custom_message: inviteMessage.trim() || null,
-            owner_name: profile?.company || profile?.firstname || user.user_metadata?.first_name || user.email,
+            owner_name: profile?.company || profile?.firstname || user?.email,
           },
         })
         if (emailError) {
