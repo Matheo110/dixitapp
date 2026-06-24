@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar'
 async function getOrCreateProfile(user) {
   const { data } = await supabase
     .from('profiles')
-    .select('slug, is_beta, beta_expires_at, plan')
+    .select('slug, is_beta, beta_expires_at, plan, company, firstname')
     .eq('id', user.id)
     .single()
 
