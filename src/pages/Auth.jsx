@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
@@ -34,7 +34,8 @@ function validatePassword(pw) {
 }
 
 export default function Auth() {
-  const [mode, setMode] = useState('login') // 'login' | 'signup' | 'reset'
+  const [searchParams] = useSearchParams()
+  const [mode, setMode] = useState(searchParams.get('tab') === 'signup' ? 'signup' : 'login')
 
   // Login / signup state
   const [firstName, setFirstName] = useState('')

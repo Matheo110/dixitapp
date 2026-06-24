@@ -80,15 +80,15 @@ export default function Landing() {
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(245,240,232,0.1)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
-              Se connecter
+              Connexion
             </button>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/login?tab=signup')}
               style={{ backgroundColor: '#C8102E', color: '#F5F0E8', padding: '0.5rem 1.1rem', borderRadius: '0.6rem', fontSize: '0.875rem', cursor: 'pointer', fontWeight: 600, border: 'none' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#a80d26')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
             >
-              Commencer gratuitement
+              Inscription
             </button>
           </div>
         </div>
