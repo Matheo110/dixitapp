@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext'
 async function getOrCreateProfile(user) {
   const { data } = await supabase
     .from('profiles')
-    .select('slug, is_beta, beta_expires_at, plan, company, firstname')
+    .select('slug, is_beta, beta_expires_at, plan, company, firstname, auto_reminder')
     .eq('id', user.id)
     .single()
 
@@ -59,6 +59,7 @@ export default function Dashboard() {
   const [inviteSent, setInviteSent] = useState(null)
   const [newInviteLink, setNewInviteLink] = useState(null)
   const [showStats, setShowStats] = useState(false)
+  const [autoReminder, setAutoReminder] = useState(true)
   const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
@@ -100,6 +101,20 @@ export default function Dashboard() {
   }, [user])
 
   useEffect(() => { fetchInvitations() }, [fetchInvitations])
+
+  // Sync auto_reminder from profile once loaded
+  useEffect(() => {
+    if (profile && profile.auto_reminder !== undefined) {
+      setAutoReminder(profile.auto_reminder !== false)
+    }
+  }, [profile])
+
+  const toggleAutoReminder = async (value) => {
+    setAutoReminder(value)
+    if (user) {
+      await supabase.from('profiles').update({ auto_reminder: value }).eq('id', user.id)
+    }
+  }
 
   const handleApprove = async (id, currentlyApproved) => {
     const next = !currentlyApproved
@@ -509,6 +524,32 @@ export default function Dashboard() {
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all resize-none"
                 style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
               />
+            </div>
+
+            {/* Auto reminder toggle */}
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => toggleAutoReminder(!autoReminder)}
+                style={{
+                  width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+                  backgroundColor: autoReminder ? '#1B2B5E' : 'rgba(27,43,94,0.15)',
+                  position: 'relative', flexShrink: 0,
+                  transition: 'background-color 0.2s ease',
+                }}
+                aria-label="Toggle auto reminder"
+              >
+                <div style={{
+                  position: 'absolute', top: 3, width: 18, height: 18,
+                  borderRadius: '50%', backgroundColor: '#ffffff',
+                  left: autoReminder ? 23 : 3,
+                  transition: 'left 0.2s ease',
+                }} />
+              </button>
+              <span style={{ fontSize: '0.82rem', color: 'rgba(27,43,94,0.6)', lineHeight: 1.4 }}>
+                {lang === 'en'
+                  ? 'Send automatic reminder after 3 days'
+                  : 'Envoyer un rappel automatique après 3 jours'}
+              </span>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-3">
