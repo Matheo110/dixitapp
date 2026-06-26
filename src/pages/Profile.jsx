@@ -33,7 +33,7 @@ export default function Profile() {
   const [firstname, setFirstname] = useState('')
   const [company, setCompany] = useState('')
   const [activity, setActivity] = useState('')
-  const [customMessage, setCustomMessage] = useState('')
+
   const [avatarUrl, setAvatarUrl] = useState('')
 
   // Wall customization
@@ -53,14 +53,14 @@ export default function Profile() {
 
       supabase
         .from('profiles')
-        .select('firstname, company, activity, custom_message, avatar_url, wall_title, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_layout')
+        .select('firstname, company, activity, avatar_url, wall_title, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_layout')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
           setFirstname(data?.firstname || user.user_metadata?.first_name || '')
           setCompany(data?.company || '')
           setActivity(data?.activity || '')
-          setCustomMessage(data?.custom_message || '')
+
           setAvatarUrl(data?.avatar_url || '')
           setWallTitle(data?.wall_title || 'Témoignages de nos clients')
           setWallBgColor(data?.wall_bg_color || '#F5F0E8')
@@ -85,7 +85,7 @@ export default function Profile() {
         firstname: firstname.trim() || null,
         company: company.trim() || null,
         activity: activity.trim() || null,
-        custom_message: customMessage.trim() || null,
+
         avatar_url: avatarUrl.trim() || null,
         wall_title: wallTitle.trim() || 'Témoignages de nos clients',
         wall_bg_color: wallBgColor,
@@ -185,23 +185,6 @@ export default function Profile() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                Message personnalisé
-                <span className="ml-1 font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>
-                  — affiché sur la page de collecte
-                </span>
-              </label>
-              <textarea
-                value={customMessage}
-                onChange={e => setCustomMessage(e.target.value)}
-                rows={3}
-                placeholder="Ex : Merci de prendre 2 minutes pour partager votre expérience !"
-                style={{ ...inputStyle, resize: 'vertical' }}
-                onFocus={onFocus}
-                onBlur={onBlur}
-              />
-            </div>
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
