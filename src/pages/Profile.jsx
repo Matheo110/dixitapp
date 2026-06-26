@@ -53,7 +53,7 @@ export default function Profile() {
 
       supabase
         .from('profiles')
-        .select('firstname, company, activity, avatar_url, wall_title, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_layout')
+        .select('*')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
