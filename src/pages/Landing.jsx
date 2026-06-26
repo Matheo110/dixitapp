@@ -240,7 +240,7 @@ export default function Landing() {
               animation: 'fadeSlideUp 0.6s ease 350ms both',
             }}
           >
-            <CountUp target={234} />+ freelances nous font confiance
+            <CountUp target={234} />+ {lang === 'en' ? 'freelancers trust us' : 'freelances nous font confiance'}
           </p>
 
           <div
