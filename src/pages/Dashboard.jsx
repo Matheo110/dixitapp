@@ -36,6 +36,14 @@ async function getOrCreateProfile(user) {
   return data || null
 }
 
+function hasLimits(profile) {
+  if (profile?.is_beta) {
+    const betaExpiry = new Date(profile.beta_expires_at || '2026-08-01')
+    if (new Date() < betaExpiry) return false
+  }
+  return profile?.plan === 'free' || !profile?.plan
+}
+
 const TABS = [
   { key: 'all', label: 'Tous' },
   { key: 'pending', label: 'En attente' },
@@ -112,6 +120,10 @@ export default function Dashboard() {
 
   const createInvitation = async () => {
     if (!user) return
+    if (hasLimits(profile) && testimonials.length >= 5) {
+      setInviteError('Limite atteinte. Passez au plan Pro pour des témoignages illimités →')
+      return
+    }
     setInviteLoading(true)
     setInviteError(null)
     setNewInviteLink(null)
@@ -198,8 +210,11 @@ export default function Dashboard() {
 
   const firstName = user?.user_metadata?.first_name
 
+  const planLabel = profile?.plan === 'pro' ? 'Pro' : profile?.plan === 'agency' ? 'Agency' : 'Plan Gratuit'
+
   const navRight = (
     <div className="flex items-center gap-5">
+      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{planLabel}</span>
       <a
         href="/profile"
         className="text-sm font-medium transition-colors"
@@ -254,6 +269,21 @@ export default function Dashboard() {
               Vous êtes en période bêta gratuite jusqu'au 1er août 2026.{' '}
               <a href="/pricing" className="font-semibold" style={{ color: '#C8102E' }}>
                 Découvrez nos plans →
+              </a>
+            </p>
+          </div>
+        )}
+
+        {/* Limit banner */}
+        {hasLimits(profile) && testimonials.length >= 5 && (
+          <div
+            className="mb-6 px-4 py-3 rounded-xl"
+            style={{ backgroundColor: '#FFF3CD', borderLeft: '3px solid #C8102E' }}
+          >
+            <p className="text-sm" style={{ color: '#1B2B5E' }}>
+              Vous avez atteint la limite de 5 témoignages du plan gratuit.{' '}
+              <a href="/pricing" className="font-semibold" style={{ color: '#C8102E' }}>
+                Passez au plan Pro pour des témoignages illimités →
               </a>
             </p>
           </div>
@@ -324,7 +354,7 @@ export default function Dashboard() {
             <div className="flex flex-col sm:flex-row gap-3 mb-3">
               <button
                 onClick={createInvitation}
-                disabled={inviteLoading}
+                disabled={inviteLoading || (hasLimits(profile) && testimonials.length >= 5)}
                 className="flex-1 px-5 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#C8102E', color: '#ffffff' }}
                 onMouseEnter={e => !inviteLoading && (e.currentTarget.style.backgroundColor = '#a80d26')}
