@@ -368,6 +368,12 @@ export default function Auth() {
 
           <p className="text-center text-xs mt-5" style={{ color: 'rgba(27,43,94,0.4)' }}>
             © 2025 dixitapp.tech — Fait en France 🇫🇷
+            <span style={{ margin: '0 0.4rem' }}>·</span>
+            <a href="/cgv" style={{ color: 'rgba(27,43,94,0.4)', textDecoration: 'none' }}>CGV</a>
+            <span style={{ margin: '0 0.3rem' }}>|</span>
+            <a href="/mentions" style={{ color: 'rgba(27,43,94,0.4)', textDecoration: 'none' }}>Mentions légales</a>
+            <span style={{ margin: '0 0.3rem' }}>|</span>
+            <a href="/privacy" style={{ color: 'rgba(27,43,94,0.4)', textDecoration: 'none' }}>Confidentialité</a>
           </p>
         </div>
       </div>

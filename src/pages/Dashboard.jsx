@@ -260,16 +260,11 @@ export default function Dashboard() {
         </h2>
 
         {/* Beta banner */}
-        {profile?.is_beta && (
-          <div
-            className="mb-6 px-4 py-3 rounded-xl"
-            style={{ backgroundColor: '#F0F4FF', borderLeft: '3px solid #1B2B5E' }}
-          >
-            <p className="text-sm" style={{ color: '#1B2B5E' }}>
+        {profile?.is_beta && new Date() < new Date('2026-08-01') && (
+          <div style={{ backgroundColor: '#F0F4FF', borderLeft: '3px solid #1B2B5E', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+            <p style={{ color: '#1B2B5E', fontSize: '0.875rem' }}>
               Vous êtes en période bêta gratuite jusqu'au 1er août 2026.{' '}
-              <a href="/pricing" className="font-semibold" style={{ color: '#C8102E' }}>
-                Découvrez nos plans →
-              </a>
+              <a href="/pricing" style={{ color: '#C8102E', fontWeight: '600' }}>Découvrez nos plans →</a>
             </p>
           </div>
         )}
@@ -498,6 +493,16 @@ export default function Dashboard() {
           )}
         </div>
       </main>
+
+      <footer style={{ backgroundColor: '#111827', padding: '1.25rem 2.5rem', textAlign: 'center' }}>
+        <span style={{ color: '#666', fontSize: '0.8rem' }}>© 2025 dixitapp.tech — Fait en France 🇫🇷</span>
+        <span style={{ color: '#444', fontSize: '0.8rem', margin: '0 0.5rem' }}>·</span>
+        <a href="/cgv" style={{ color: '#666', fontSize: '0.8rem', textDecoration: 'none' }}>CGV</a>
+        <span style={{ color: '#444', fontSize: '0.8rem', margin: '0 0.4rem' }}>|</span>
+        <a href="/mentions" style={{ color: '#666', fontSize: '0.8rem', textDecoration: 'none' }}>Mentions légales</a>
+        <span style={{ color: '#444', fontSize: '0.8rem', margin: '0 0.4rem' }}>|</span>
+        <a href="/privacy" style={{ color: '#666', fontSize: '0.8rem', textDecoration: 'none' }}>Confidentialité</a>
+      </footer>
     </div>
   )
 }

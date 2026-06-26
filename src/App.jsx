@@ -7,6 +7,9 @@ import Collect from './pages/Collect'
 import Wall from './pages/Wall'
 import ResetPassword from './pages/ResetPassword'
 import Pricing from './pages/Pricing'
+import CGV from './pages/CGV'
+import Mentions from './pages/Mentions'
+import Privacy from './pages/Privacy'
 import PrivateRoute from './components/PrivateRoute'
 
 export default function App() {
@@ -21,6 +24,9 @@ export default function App() {
         <Route path="/wall/:slug" element={<Wall />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/cgv" element={<CGV />} />
+        <Route path="/mentions" element={<Mentions />} />
+        <Route path="/privacy" element={<Privacy />} />
       </Routes>
     </BrowserRouter>
   )
