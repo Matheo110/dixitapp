@@ -69,7 +69,9 @@ export default function Landing() {
   const { lang, setLanguage, t } = useLanguage()
   const heroRef = useRef(null)
   const pricingRef = useRef(null)
+  const exitReadyRef = useRef(false)
   const [parallaxY, setParallaxY] = useState(0)
+  const [showPopup, setShowPopup] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -87,6 +89,24 @@ export default function Landing() {
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Exit intent: fires once per session after 5s on page, when mouse leaves toward top
+  useEffect(() => {
+    const KEY = 'dixitapp_exit_popup'
+    if (sessionStorage.getItem(KEY)) return
+    const timer = setTimeout(() => { exitReadyRef.current = true }, 5000)
+    const onLeave = (e) => {
+      if (e.clientY >= 10 || !exitReadyRef.current) return
+      if (sessionStorage.getItem(KEY)) return
+      sessionStorage.setItem(KEY, '1')
+      setShowPopup(true)
+    }
+    document.addEventListener('mouseleave', onLeave)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('mouseleave', onLeave)
+    }
   }, [])
 
   const scrollToPricing = () => {
@@ -415,6 +435,47 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ── EXIT INTENT POPUP ── */}
+      {showPopup && (
+        <div
+          onClick={() => setShowPopup(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '2.5rem', maxWidth: '420px', width: '100%', borderTop: '4px solid #C8102E' }}
+          >
+            <h2
+              style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.6rem', color: '#1B2B5E', marginBottom: '0.75rem' }}
+            >
+              {lang === 'en' ? 'Wait! 🎁' : 'Attendez ! 🎁'}
+            </h2>
+            <p style={{ fontWeight: 600, color: '#1B2B5E', fontSize: '1rem', marginBottom: '0.5rem' }}>
+              {lang === 'en' ? 'Try Dixitapp for free before you leave' : 'Essayez Dixitapp gratuitement avant de partir'}
+            </p>
+            <p style={{ fontSize: '0.875rem', color: '#666', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+              {lang === 'en' ? 'Full access during beta. No credit card required.' : 'Accès complet pendant la bêta. Aucune carte bancaire requise.'}
+            </p>
+            <button
+              onClick={() => navigate('/login')}
+              style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', width: '100%', padding: '0.85rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.9rem', border: 'none', cursor: 'pointer', marginBottom: '1rem', transition: 'opacity 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+            >
+              {lang === 'en' ? 'Get started for free' : 'Commencer gratuitement'}
+            </button>
+            <div style={{ textAlign: 'center' }}>
+              <button
+                onClick={() => setShowPopup(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', fontSize: '0.85rem' }}
+              >
+                {lang === 'en' ? 'No thanks' : 'Non merci'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── FOOTER ── */}
       <footer style={{ backgroundColor: '#111827', padding: '1.25rem 2.5rem', textAlign: 'center', marginTop: 'auto' }}>
