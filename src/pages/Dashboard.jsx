@@ -58,6 +58,7 @@ export default function Dashboard() {
   const [inviteError, setInviteError] = useState(null)
   const [inviteSent, setInviteSent] = useState(null)
   const [newInviteLink, setNewInviteLink] = useState(null)
+  const [showStats, setShowStats] = useState(false)
   const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
@@ -273,6 +274,12 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F5F0E8' }}>
+      <style>{`
+        @keyframes statsReveal {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       <Navbar right={navRight} />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
@@ -333,9 +340,29 @@ export default function Dashboard() {
 
         {/* Statistics section */}
         <div className="mb-8">
-          <h3 className="font-display font-semibold text-xl mb-4" style={{ color: '#1B2B5E' }}>
-            {t.dash.statsTitle}
-          </h3>
+          <button
+            onClick={() => setShowStats(s => !s)}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(27,43,94,0.2)',
+              color: '#1B2B5E',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              marginBottom: showStats ? '1.25rem' : '0',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(27,43,94,0.05)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            {showStats
+              ? (lang === 'en' ? 'Hide statistics ▲' : 'Masquer les statistiques ▲')
+              : (lang === 'en' ? 'Show statistics ▼' : 'Voir les statistiques ▼')}
+          </button>
+
+          {showStats && (
+          <div style={{ animation: 'statsReveal 0.3s ease both' }}>
 
           {/* Response rate + avg rating cards */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
@@ -439,6 +466,9 @@ export default function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          </div>
+          )}
         </div>
 
         {/* Invite section */}
