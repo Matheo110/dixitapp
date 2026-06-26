@@ -99,6 +99,10 @@ export const en = {
     emptyPending: { title: 'No pending testimonials', sub: 'All caught up!' },
     emptyApproved: { title: 'No approved testimonials', sub: 'Approve received testimonials to display them on your wall.' },
     videoTag: '🎥 Video testimonial',
+    statsTitle: 'Statistics',
+    chartTitle: 'Testimonials per week',
+    responseRate: 'Response rate',
+    avgRating: 'Average rating',
   },
 
   collect: {

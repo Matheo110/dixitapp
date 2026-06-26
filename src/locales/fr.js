@@ -99,6 +99,10 @@ export const fr = {
     emptyPending: { title: 'Aucun témoignage en attente', sub: 'Tout est à jour !' },
     emptyApproved: { title: 'Aucun témoignage approuvé', sub: 'Approuvez les témoignages reçus pour les afficher sur votre mur.' },
     videoTag: '🎥 Témoignage vidéo',
+    statsTitle: 'Statistiques',
+    chartTitle: 'Témoignages par semaine',
+    responseRate: 'Taux de réponse',
+    avgRating: 'Note moyenne',
   },
 
   collect: {

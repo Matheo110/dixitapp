@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { generateSlug } from '../lib/slug'
@@ -195,6 +196,32 @@ export default function Dashboard() {
     pending: testimonials.filter(item => !item.approved).length,
   }
 
+  const responseRate = invitations.length > 0
+    ? Math.round((invitations.filter(inv => inv.used).length / invitations.length) * 100)
+    : 0
+
+  const ratedItems = testimonials.filter(item => item.approved && item.rating)
+  const avgRating = ratedItems.length > 0
+    ? ratedItems.reduce((sum, item) => sum + item.rating, 0) / ratedItems.length
+    : 0
+
+  const weeklyData = useMemo(() => {
+    const now = new Date()
+    now.setHours(23, 59, 59, 999)
+    return Array.from({ length: 8 }, (_, i) => {
+      const weeksAgo = 7 - i
+      const weekEnd = new Date(now.getTime() - weeksAgo * 7 * 86400000)
+      const weekStart = new Date(weekEnd.getTime() - 7 * 86400000)
+      weekStart.setHours(0, 0, 0, 0)
+      const count = testimonials.filter(item => {
+        const d = new Date(item.created_at)
+        return d >= weekStart && d <= weekEnd
+      }).length
+      const label = weekStart.toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'short', day: 'numeric' })
+      return { week: label, count }
+    })
+  }, [testimonials, lang])
+
   const filtered = testimonials.filter(item => {
     if (tab === 'pending') return !item.approved
     if (tab === 'approved') return item.approved
@@ -302,6 +329,116 @@ export default function Dashboard() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Statistics section */}
+        <div className="mb-8">
+          <h3 className="font-display font-semibold text-xl mb-4" style={{ color: '#1B2B5E' }}>
+            {t.dash.statsTitle}
+          </h3>
+
+          {/* Response rate + avg rating cards */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+
+            {/* Response rate */}
+            <div className="bg-white rounded-2xl p-5" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+              <div className="text-xs mb-3 leading-snug" style={{ color: 'rgba(27,43,94,0.45)' }}>
+                {t.dash.responseRate}
+              </div>
+              <div className="flex items-center gap-4">
+                <svg width="72" height="72" viewBox="0 0 72 72" style={{ flexShrink: 0 }}>
+                  <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(27,43,94,0.1)" strokeWidth="6" />
+                  <circle
+                    cx="36" cy="36" r="28" fill="none"
+                    stroke="#1B2B5E" strokeWidth="6"
+                    strokeDasharray={2 * Math.PI * 28}
+                    strokeDashoffset={2 * Math.PI * 28 * (1 - responseRate / 100)}
+                    strokeLinecap="round"
+                    transform="rotate(-90 36 36)"
+                    style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                  />
+                  <text x="36" y="41" textAnchor="middle" fill="#1B2B5E" fontSize="13" fontWeight="700" fontFamily="Inter, sans-serif">
+                    {responseRate}%
+                  </text>
+                </svg>
+                <div>
+                  <div className="font-display font-bold text-2xl" style={{ color: '#1B2B5E' }}>
+                    {invitations.filter(inv => inv.used).length}
+                    <span className="text-sm font-normal" style={{ color: 'rgba(27,43,94,0.4)' }}>
+                      /{invitations.length}
+                    </span>
+                  </div>
+                  <div className="text-xs mt-0.5" style={{ color: 'rgba(27,43,94,0.4)' }}>
+                    {lang === 'en' ? 'invitations used' : 'invitations utilisées'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Average rating */}
+            <div className="bg-white rounded-2xl p-5" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+              <div className="text-xs mb-3 leading-snug" style={{ color: 'rgba(27,43,94,0.45)' }}>
+                {t.dash.avgRating}
+              </div>
+              <div className="font-display font-bold text-4xl" style={{ color: '#C8102E' }}>
+                {ratedItems.length > 0 ? avgRating.toFixed(1) : '—'}
+                {ratedItems.length > 0 && (
+                  <span className="text-lg font-normal" style={{ color: 'rgba(27,43,94,0.35)' }}> / 5</span>
+                )}
+              </div>
+              <div className="flex gap-0.5 mt-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span key={i} style={{ color: i < Math.round(avgRating) ? '#C8102E' : 'rgba(27,43,94,0.15)', fontSize: '1rem' }}>★</span>
+                ))}
+              </div>
+              <div className="text-xs mt-1.5" style={{ color: 'rgba(27,43,94,0.4)' }}>
+                {ratedItems.length} {lang === 'en' ? 'rated review(s)' : 'avis notés'}
+              </div>
+            </div>
+          </div>
+
+          {/* Weekly chart */}
+          <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+            <p className="text-sm font-medium mb-4" style={{ color: 'rgba(27,43,94,0.5)' }}>
+              {t.dash.chartTitle}
+            </p>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={weeklyData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(27,43,94,0.06)" vertical={false} />
+                <XAxis
+                  dataKey="week"
+                  tick={{ fontSize: 11, fill: 'rgba(27,43,94,0.4)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: 'rgba(27,43,94,0.4)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={28}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: '8px',
+                    border: 'none',
+                    boxShadow: '0 4px 20px rgba(27,43,94,0.12)',
+                    fontSize: '12px',
+                    color: '#1B2B5E',
+                  }}
+                  formatter={(value) => [value, lang === 'en' ? 'Testimonials' : 'Témoignages']}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#1B2B5E"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#C8102E', r: 4, strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#C8102E' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Invite section */}
