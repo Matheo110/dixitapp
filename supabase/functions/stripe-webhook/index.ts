@@ -1,8 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const PRICE_TO_PLAN: Record<string, string> = {
-  'price_1Tl6wCIxd1EjjYKHZiUCdX69': 'pro',
-  'price_1Tl6xmIxd1EjjYKHqEEKndhX': 'agency',
+  'price_1TmV3iIBdaudLYGbTTF0OSEq': 'pro',
+  'price_1TmV3TIBdaudLYGbI9ykOCHA': 'agency',
 }
 
 async function verifySignature(body: string, sigHeader: string, secret: string): Promise<boolean> {
