@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { generateSlug } from '../lib/slug'
 import Navbar from '../components/Navbar'
 
 const inputStyle = {
@@ -89,10 +90,12 @@ export default function Auth() {
       if (error) { setError(error.message); setLoading(false) }
       else {
         if (data?.user) {
+          const nameForSlug = firstName.trim() || email.split('@')[0]
           await supabase.from('profiles').upsert({
             id: data.user.id,
             firstname: firstName.trim() || null,
             company: signupCompany.trim() || null,
+            slug: generateSlug(nameForSlug),
           })
         }
         setMessage('Vérifiez votre email pour confirmer votre compte, puis connectez-vous.')
