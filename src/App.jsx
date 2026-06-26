@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { LanguageProvider } from './context/LanguageContext'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
@@ -14,6 +15,7 @@ import PrivateRoute from './components/PrivateRoute'
 
 export default function App() {
   return (
+    <LanguageProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -29,5 +31,6 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
       </Routes>
     </BrowserRouter>
+    </LanguageProvider>
   )
 }

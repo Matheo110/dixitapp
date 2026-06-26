@@ -1,66 +1,50 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-
-const plans = [
-  {
-    key: 'free',
-    name: 'Free',
-    price: '0€',
-    period: '/mois',
-    features: ['5 témoignages', 'Widget avec branding', 'Texte uniquement'],
-    cta: 'Commencer gratuitement',
-    featured: false,
-    href: '/login',
-  },
-  {
-    key: 'pro',
-    name: 'Pro',
-    price: '29€',
-    period: '/mois',
-    features: ['Témoignages illimités', 'Vidéo + texte', 'Sans branding', 'Support prioritaire'],
-    cta: 'Choisir Pro',
-    featured: true,
-    href: '/pricing',
-  },
-  {
-    key: 'agency',
-    name: 'Agency',
-    price: '79€',
-    period: '/mois',
-    features: ['Multi-comptes', 'White label', 'Accès API', 'Onboarding dédié'],
-    cta: 'Choisir Agency',
-    featured: false,
-    href: '/pricing',
-  },
-]
-
-const steps = [
-  {
-    num: '01',
-    title: 'Invitez vos clients',
-    desc: 'Générez un lien unique pour chaque client en quelques secondes.',
-  },
-  {
-    num: '02',
-    title: 'Ils témoignent en 2 minutes',
-    desc: 'Écrit ou vidéo, sans créer de compte. Zero friction pour eux.',
-  },
-  {
-    num: '03',
-    title: 'Affichez automatiquement',
-    desc: 'Approuvez et intégrez les témoignages directement sur votre site.',
-  },
-]
+import { useLanguage } from '../context/LanguageContext'
 
 export default function Landing() {
   const navigate = useNavigate()
+  const { lang, setLanguage, t } = useLanguage()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate('/dashboard', { replace: true })
     })
   }, [navigate])
+
+  const plans = [
+    {
+      key: 'free',
+      name: 'Free',
+      price: '0€',
+      period: t.landing.perMonth,
+      features: t.landing.planFeatures.free,
+      cta: t.landing.planCtaFree,
+      featured: false,
+      href: '/login',
+    },
+    {
+      key: 'pro',
+      name: 'Pro',
+      price: '29€',
+      period: t.landing.perMonth,
+      features: t.landing.planFeatures.pro,
+      cta: t.landing.planCtaPro,
+      featured: true,
+      href: '/pricing',
+    },
+    {
+      key: 'agency',
+      name: 'Agency',
+      price: '79€',
+      period: t.landing.perMonth,
+      features: t.landing.planFeatures.agency,
+      cta: t.landing.planCtaAgency,
+      featured: false,
+      href: '/pricing',
+    },
+  ]
 
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -74,13 +58,29 @@ export default function Landing() {
             DIXITAPP
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Language toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.72rem', letterSpacing: '0.05em', marginRight: '0.25rem' }}>
+              <button
+                onClick={() => setLanguage('fr')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', fontWeight: lang === 'fr' ? 700 : 400, color: lang === 'fr' ? '#ffffff' : 'rgba(255,255,255,0.45)' }}
+              >
+                FR
+              </button>
+              <span style={{ color: 'rgba(255,255,255,0.25)', margin: '0 1px' }}>|</span>
+              <button
+                onClick={() => setLanguage('en')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', fontWeight: lang === 'en' ? 700 : 400, color: lang === 'en' ? '#ffffff' : 'rgba(255,255,255,0.45)' }}
+              >
+                EN
+              </button>
+            </div>
             <button
               onClick={() => navigate('/login')}
               style={{ background: 'transparent', border: '1px solid #F5F0E8', color: '#F5F0E8', padding: '0.5rem 1.1rem', borderRadius: '0.6rem', fontSize: '0.875rem', cursor: 'pointer', fontWeight: 500 }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(245,240,232,0.1)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
-              Connexion
+              {t.nav.login}
             </button>
             <button
               onClick={() => navigate('/login?tab=signup')}
@@ -88,7 +88,7 @@ export default function Landing() {
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#a80d26')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
             >
-              Inscription
+              {t.nav.signup}
             </button>
           </div>
         </div>
@@ -100,17 +100,17 @@ export default function Landing() {
           <h1
             style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '3.5rem', color: '#1B2B5E', lineHeight: 1.15, marginBottom: '1rem' }}
           >
-            Bienvenue sur Dixitapp
+            {t.landing.welcome}
           </h1>
           <p
             style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.5rem', color: '#1B2B5E', lineHeight: 1.35, marginBottom: '1.25rem' }}
           >
-            Vos clients témoignent. Automatiquement.
+            {t.landing.subtitle}
           </p>
           <p
             style={{ fontSize: '0.9rem', color: '#888', lineHeight: 1.7, maxWidth: '560px', margin: '0 auto 2.5rem' }}
           >
-            Collectez des avis vidéo et texte en un lien unique. Affichez-les sur votre site en quelques secondes. Sans relances, sans friction.
+            {t.landing.description}
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
@@ -119,7 +119,7 @@ export default function Landing() {
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
-              Commencer gratuitement
+              {t.landing.ctaStart}
             </button>
             <button
               onClick={() => navigate('/pricing')}
@@ -127,7 +127,7 @@ export default function Landing() {
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.65')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
-              Voir les plans
+              {t.landing.ctaPlans}
             </button>
           </div>
         </div>
@@ -139,16 +139,16 @@ export default function Landing() {
           <h2
             style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '2rem', color: '#1B2B5E', textAlign: 'center', marginBottom: '0.75rem' }}
           >
-            Comment ça marche ?
+            {t.landing.howItWorks}
           </h2>
           <div style={{ width: 40, height: 3, backgroundColor: '#C8102E', borderRadius: '9999px', margin: '0 auto 3.5rem' }} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem' }}>
-            {steps.map(step => (
-              <div key={step.num} style={{ textAlign: 'center', padding: '1.5rem' }}>
+            {t.landing.steps.map((step, i) => (
+              <div key={i} style={{ textAlign: 'center', padding: '1.5rem' }}>
                 <div
                   style={{ width: '3rem', height: '3rem', borderRadius: '50%', backgroundColor: '#F5F0E8', border: '2px solid #1B2B5E', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', fontFamily: 'Playfair Display, serif', fontWeight: 700, color: '#1B2B5E', fontSize: '0.85rem' }}
                 >
-                  {step.num}
+                  {String(i + 1).padStart(2, '0')}
                 </div>
                 <h3 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', color: '#1B2B5E', marginBottom: '0.6rem' }}>
                   {step.title}
@@ -168,7 +168,7 @@ export default function Landing() {
           <h2
             style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '2rem', color: '#1B2B5E', textAlign: 'center', marginBottom: '0.75rem' }}
           >
-            Tarifs simples et transparents
+            {t.landing.pricingTitle}
           </h2>
           <div style={{ width: 40, height: 3, backgroundColor: '#C8102E', borderRadius: '9999px', margin: '0 auto 3.5rem' }} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
@@ -203,7 +203,7 @@ export default function Landing() {
                 {plan.featured && (
                   <div style={{ marginBottom: '1rem' }}>
                     <span style={{ backgroundColor: '#C8102E', color: '#ffffff', fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
-                      Recommandé
+                      {t.landing.recommended}
                     </span>
                   </div>
                 )}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { generateSlug } from '../lib/slug'
 import Navbar from '../components/Navbar'
+import { useLanguage } from '../context/LanguageContext'
 
 async function getOrCreateProfile(user) {
   const { data } = await supabase
@@ -11,22 +12,18 @@ async function getOrCreateProfile(user) {
     .eq('id', user.id)
     .single()
 
-  // Profile exists and already has a slug — nothing to do
   if (data?.slug) return data
 
-  // Determine best name for slug generation
   const nameForSlug = data?.firstname || user.user_metadata?.first_name || user.email.split('@')[0]
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const slug = generateSlug(nameForSlug)
 
     if (data) {
-      // Profile exists (created during signup) but has no slug yet — just add the slug
       const { error } = await supabase.from('profiles').update({ slug }).eq('id', user.id)
       if (!error) return { ...data, slug }
       if (error.code !== '23505') break
     } else {
-      // No profile at all — insert fresh
       const { error } = await supabase.from('profiles').insert({ id: user.id, slug })
       if (!error) return { slug, is_beta: false, beta_expires_at: null, plan: 'free' }
       if (error.code !== '23505') break
@@ -43,12 +40,6 @@ function hasLimits(profile) {
   }
   return profile?.plan === 'free' || !profile?.plan
 }
-
-const TABS = [
-  { key: 'all', label: 'Tous' },
-  { key: 'pending', label: 'En attente' },
-  { key: 'approved', label: 'Approuvés' },
-]
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -68,6 +59,7 @@ export default function Dashboard() {
   const [newInviteLink, setNewInviteLink] = useState(null)
   const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
+  const { t, lang } = useLanguage()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
@@ -110,18 +102,18 @@ export default function Dashboard() {
   const handleApprove = async (id, currentlyApproved) => {
     const next = !currentlyApproved
     await supabase.from('testimonials').update({ approved: next }).eq('id', id)
-    setTestimonials(prev => prev.map(t => t.id === id ? { ...t, approved: next } : t))
+    setTestimonials(prev => prev.map(item => item.id === id ? { ...item, approved: next } : item))
   }
 
   const handleReject = async (id) => {
     await supabase.from('testimonials').delete().eq('id', id)
-    setTestimonials(prev => prev.filter(t => t.id !== id))
+    setTestimonials(prev => prev.filter(item => item.id !== id))
   }
 
   const createInvitation = async () => {
     if (!user) return
     if (hasLimits(profile) && testimonials.length >= 5) {
-      setInviteError('Limite atteinte. Passez au plan Pro pour des témoignages illimités →')
+      setInviteError(t.dash.limitError)
       return
     }
     setInviteLoading(true)
@@ -174,7 +166,7 @@ export default function Dashboard() {
   }
 
   const deleteInvitation = async (id) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce lien ?')) return
+    if (!window.confirm(t.dash.confirmDelete)) return
     await supabase.from('invitations').delete().eq('id', id)
     setInvitations(prev => prev.filter(inv => inv.id !== id))
   }
@@ -198,19 +190,25 @@ export default function Dashboard() {
 
   const stats = {
     received: testimonials.length,
-    approved: testimonials.filter(t => t.approved).length,
-    pending: testimonials.filter(t => !t.approved).length,
+    approved: testimonials.filter(item => item.approved).length,
+    pending: testimonials.filter(item => !item.approved).length,
   }
 
-  const filtered = testimonials.filter(t => {
-    if (tab === 'pending') return !t.approved
-    if (tab === 'approved') return t.approved
+  const filtered = testimonials.filter(item => {
+    if (tab === 'pending') return !item.approved
+    if (tab === 'approved') return item.approved
     return true
   })
 
   const firstName = user?.user_metadata?.first_name
 
-  const planLabel = profile?.plan === 'pro' ? 'Pro' : profile?.plan === 'agency' ? 'Agency' : 'Plan Gratuit'
+  const planLabel = profile?.plan === 'pro' ? 'Pro' : profile?.plan === 'agency' ? 'Agency' : t.dash.planFree
+
+  const TABS = [
+    { key: 'all', label: t.dash.tabAll },
+    { key: 'pending', label: t.dash.tabPending },
+    { key: 'approved', label: t.dash.tabApproved },
+  ]
 
   const navRight = (
     <div className="flex items-center gap-5">
@@ -222,7 +220,7 @@ export default function Dashboard() {
         onMouseEnter={e => (e.target.style.color = '#ffffff')}
         onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
       >
-        Mon profil
+        {t.nav.myProfile}
       </a>
       <a
         href="/pricing"
@@ -231,7 +229,7 @@ export default function Dashboard() {
         onMouseEnter={e => (e.target.style.color = '#ffffff')}
         onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
       >
-        Voir les plans
+        {t.nav.seePlans}
       </a>
       <button
         onClick={handleLogout}
@@ -240,7 +238,7 @@ export default function Dashboard() {
         onMouseEnter={e => (e.target.style.color = '#ffffff')}
         onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
       >
-        Déconnexion
+        {t.nav.logout}
       </button>
     </div>
   )
@@ -251,20 +249,19 @@ export default function Dashboard() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
 
-        {/* Welcome */}
         <h2
           className="font-display font-bold text-3xl mb-8"
           style={{ color: '#1B2B5E' }}
         >
-          Bonjour{firstName ? `, ${firstName}` : ''} 👋
+          {t.dash.hello}{firstName ? `, ${firstName}` : ''} 👋
         </h2>
 
         {/* Beta banner */}
         {profile?.is_beta && new Date() < new Date('2026-08-01') && (
           <div style={{ backgroundColor: '#F0F4FF', borderLeft: '3px solid #1B2B5E', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
             <p style={{ color: '#1B2B5E', fontSize: '0.875rem' }}>
-              Vous êtes en période bêta gratuite jusqu'au 1er août 2026.{' '}
-              <a href="/pricing" style={{ color: '#C8102E', fontWeight: '600' }}>Découvrez nos plans →</a>
+              {t.dash.betaBanner}{' '}
+              <a href="/pricing" style={{ color: '#C8102E', fontWeight: '600' }}>{t.dash.betaBannerLink}</a>
             </p>
           </div>
         )}
@@ -276,9 +273,9 @@ export default function Dashboard() {
             style={{ backgroundColor: '#FFF3CD', borderLeft: '3px solid #C8102E' }}
           >
             <p className="text-sm" style={{ color: '#1B2B5E' }}>
-              Vous avez atteint la limite de 5 témoignages du plan gratuit.{' '}
+              {t.dash.limitBanner}{' '}
               <a href="/pricing" className="font-semibold" style={{ color: '#C8102E' }}>
-                Passez au plan Pro pour des témoignages illimités →
+                {t.dash.limitBannerLink}
               </a>
             </p>
           </div>
@@ -287,9 +284,9 @@ export default function Dashboard() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
           {[
-            { label: 'Témoignages reçus', value: stats.received, color: '#1B2B5E' },
-            { label: 'Témoignages approuvés', value: stats.approved, color: '#1B2B5E' },
-            { label: 'En attente', value: stats.pending, color: '#C8102E' },
+            { label: t.dash.statsReceived, value: stats.received, color: '#1B2B5E' },
+            { label: t.dash.statsApproved, value: stats.approved, color: '#1B2B5E' },
+            { label: t.dash.statsPending, value: stats.pending, color: '#C8102E' },
           ].map(({ label, value, color }) => (
             <div
               key={label}
@@ -310,7 +307,7 @@ export default function Dashboard() {
         <div className="bg-white mb-8 rounded-2xl" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
           <div className="p-6">
             <h3 className="font-display font-semibold text-lg mb-4" style={{ color: '#1B2B5E' }}>
-              Inviter un client
+              {t.dash.inviteTitle}
             </h3>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-3">
@@ -318,7 +315,7 @@ export default function Dashboard() {
                 type="text"
                 value={clientName}
                 onChange={e => setClientName(e.target.value)}
-                placeholder="Prénom du client"
+                placeholder={t.dash.clientFirstName}
                 className="flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
               />
@@ -326,7 +323,7 @@ export default function Dashboard() {
                 type="email"
                 value={clientEmail}
                 onChange={e => setClientEmail(e.target.value)}
-                placeholder="Email du client"
+                placeholder={t.dash.clientEmailPlaceholder}
                 className="flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
               />
@@ -334,13 +331,13 @@ export default function Dashboard() {
 
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'rgba(27,43,94,0.55)' }}>
-                Message personnalisé <span style={{ fontWeight: 400 }}>(optionnel)</span>
+                {t.dash.customMessage} <span style={{ fontWeight: 400 }}>(optionnel)</span>
               </label>
               <textarea
                 value={inviteMessage}
                 onChange={e => setInviteMessage(e.target.value)}
                 rows={3}
-                placeholder="Bonjour [Prénom], je serais ravi d'avoir votre avis sur notre collaboration. Cela ne prendra que 2 minutes !"
+                placeholder={t.dash.customMessagePlaceholder}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all resize-none"
                 style={{ backgroundColor: '#F5F0E8', border: '1.5px solid rgba(27,43,94,0.2)', color: '#1B2B5E' }}
               />
@@ -355,7 +352,7 @@ export default function Dashboard() {
                 onMouseEnter={e => !inviteLoading && (e.currentTarget.style.backgroundColor = '#a80d26')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
               >
-                {inviteLoading ? 'Génération…' : clientEmail ? "Générer et envoyer l'invitation" : 'Générer le lien'}
+                {inviteLoading ? t.dash.generating : clientEmail ? t.dash.generateAndSend : t.dash.generateLink}
               </button>
               <button
                 onClick={() => user && window.open(`${window.location.origin}/wall/${user.id}`, '_blank')}
@@ -364,7 +361,7 @@ export default function Dashboard() {
                 onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1B2B5E'; e.currentTarget.style.color = '#F5F0E8' }}
                 onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; e.currentTarget.style.color = '#1B2B5E' }}
               >
-                Voir mon mur public
+                {t.dash.viewPublicWall}
               </button>
             </div>
 
@@ -374,7 +371,7 @@ export default function Dashboard() {
 
             {inviteSent && (
               <p className="text-sm mb-3 font-medium" style={{ color: '#1B2B5E' }}>
-                Invitation envoyée à {inviteSent} ✓
+                {t.dash.inviteSentTo} {inviteSent} ✓
               </p>
             )}
 
@@ -389,7 +386,7 @@ export default function Dashboard() {
                   className="text-xs px-3 py-1.5 rounded-lg shrink-0 transition-all"
                   style={copiedInvite === 'new' ? { backgroundColor: 'rgba(27,43,94,0.12)', color: '#1B2B5E' } : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
                 >
-                  {copiedInvite === 'new' ? 'Copié !' : 'Copier'}
+                  {copiedInvite === 'new' ? t.dash.copied : t.dash.copy}
                 </button>
               </div>
             )}
@@ -397,7 +394,7 @@ export default function Dashboard() {
             {invitations.filter(inv => !inv.used).length > 0 && (
               <div>
                 <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'rgba(27,43,94,0.4)' }}>
-                  Liens envoyés
+                  {t.dash.sentLinks}
                 </p>
                 <div className="space-y-2">
                   {invitations.filter(inv => !inv.used).map(inv => {
@@ -406,7 +403,7 @@ export default function Dashboard() {
                       <div key={inv.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ backgroundColor: '#F5F0E8' }}>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium" style={{ color: '#1B2B5E' }}>
-                            {inv.client_name || inv.client_email || 'Lien sans nom'}
+                            {inv.client_name || inv.client_email || t.dash.noName}
                           </p>
                           <p className="text-xs truncate" style={{ color: 'rgba(27,43,94,0.4)' }}>{link}</p>
                         </div>
@@ -416,7 +413,7 @@ export default function Dashboard() {
                             ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }
                             : { backgroundColor: 'rgba(200,16,46,0.1)', color: '#C8102E' }}
                         >
-                          {inv.used ? 'Utilisé' : 'En attente'}
+                          {inv.used ? t.dash.statusUsed : t.dash.statusPending}
                         </span>
                         <button
                           onClick={() => { navigator.clipboard.writeText(link); setCopiedInvite(inv.id); setTimeout(() => setCopiedInvite(null), 2000) }}
@@ -425,14 +422,14 @@ export default function Dashboard() {
                             ? { backgroundColor: 'rgba(27,43,94,0.12)', color: '#1B2B5E' }
                             : { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }}
                         >
-                          {copiedInvite === inv.id ? 'Copié !' : 'Copier'}
+                          {copiedInvite === inv.id ? t.dash.copied : t.dash.copy}
                         </button>
                         <button
                           onClick={() => deleteInvitation(inv.id)}
                           className="text-xs px-2.5 py-1.5 rounded-lg shrink-0 transition-all"
                           style={{ backgroundColor: 'transparent', border: '1px solid #C8102E', color: '#C8102E' }}
                         >
-                          Supprimer
+                          {t.dash.delete}
                         </button>
                       </div>
                     )
@@ -450,7 +447,7 @@ export default function Dashboard() {
               className="font-display font-semibold text-xl"
               style={{ color: '#1B2B5E' }}
             >
-              Témoignages
+              {t.dash.testimonialsTitle}
             </h3>
             <div
               className="flex rounded-xl p-1 gap-1"
@@ -475,16 +472,16 @@ export default function Dashboard() {
 
           {loading ? (
             <div className="text-center py-20 text-sm" style={{ color: 'rgba(27,43,94,0.35)' }}>
-              Chargement…
+              {t.dash.loadingText}
             </div>
           ) : filtered.length === 0 ? (
             <EmptyState tab={tab} />
           ) : (
             <div className="grid gap-3">
-              {filtered.map(t => (
+              {filtered.map(item => (
                 <TestimonialCard
-                  key={t.id}
-                  testimonial={t}
+                  key={item.id}
+                  testimonial={item}
                   onApprove={handleApprove}
                   onReject={handleReject}
                 />
@@ -508,10 +505,11 @@ export default function Dashboard() {
 }
 
 function EmptyState({ tab }) {
+  const { t } = useLanguage()
   const messages = {
-    all: { title: 'Aucun témoignage pour le moment', sub: 'Partagez votre lien de collecte pour commencer.' },
-    pending: { title: 'Aucun témoignage en attente', sub: 'Tout est à jour !' },
-    approved: { title: 'Aucun témoignage approuvé', sub: 'Approuvez les témoignages reçus pour les afficher sur votre mur.' },
+    all: t.dash.emptyAll,
+    pending: t.dash.emptyPending,
+    approved: t.dash.emptyApproved,
   }
   const { title, sub } = messages[tab]
   return (
@@ -522,10 +520,11 @@ function EmptyState({ tab }) {
   )
 }
 
-function TestimonialCard({ testimonial: t, onApprove, onReject }) {
+function TestimonialCard({ testimonial, onApprove, onReject }) {
+  const { t, lang } = useLanguage()
   const [rejecting, setRejecting] = useState(false)
-  const initials = t.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-  const date = new Date(t.created_at).toLocaleDateString('fr-FR', {
+  const initials = testimonial.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  const date = new Date(testimonial.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 
@@ -533,8 +532,8 @@ function TestimonialCard({ testimonial: t, onApprove, onReject }) {
     <div
       className="bg-white rounded-2xl p-5 sm:p-6 transition-all"
       style={{
-        border: t.approved ? '1px solid rgba(27,43,94,0.1)' : '1px solid rgba(200,16,46,0.2)',
-        borderLeft: t.approved ? undefined : '3px solid #C8102E',
+        border: testimonial.approved ? '1px solid rgba(27,43,94,0.1)' : '1px solid rgba(200,16,46,0.2)',
+        borderLeft: testimonial.approved ? undefined : '3px solid #C8102E',
       }}
     >
       <div className="flex items-start gap-4">
@@ -547,74 +546,74 @@ function TestimonialCard({ testimonial: t, onApprove, onReject }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
-            <span className="font-semibold text-sm" style={{ color: '#1B2B5E' }}>{t.name}</span>
-            {(t.role || t.company) && (
+            <span className="font-semibold text-sm" style={{ color: '#1B2B5E' }}>{testimonial.name}</span>
+            {(testimonial.role || testimonial.company) && (
               <span className="text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>
-                {[t.role, t.company].filter(Boolean).join(' · ')}
+                {[testimonial.role, testimonial.company].filter(Boolean).join(' · ')}
               </span>
             )}
-            {!t.approved && (
+            {!testimonial.approved && (
               <span
                 className="ml-auto text-xs px-2.5 py-0.5 rounded-full font-medium"
                 style={{ backgroundColor: 'rgba(200,16,46,0.1)', color: '#C8102E' }}
               >
-                En attente
+                {t.dash.statusPending}
               </span>
             )}
           </div>
 
-          {t.rating && (
+          {testimonial.rating && (
             <div className="flex gap-0.5 mb-2">
               {Array.from({ length: 5 }).map((_, i) => (
-                <span key={i} className="text-sm" style={{ color: i < t.rating ? '#C8102E' : 'rgba(27,43,94,0.15)' }}>
+                <span key={i} className="text-sm" style={{ color: i < testimonial.rating ? '#C8102E' : 'rgba(27,43,94,0.15)' }}>
                   ★
                 </span>
               ))}
             </div>
           )}
 
-          {t.video_url ? (
+          {testimonial.video_url ? (
             <video
-              src={t.video_url}
+              src={testimonial.video_url}
               controls
               playsInline
               className="w-full rounded-xl mb-2"
               style={{ maxHeight: '300px', backgroundColor: '#000' }}
             />
-          ) : t.message === '[Témoignage vidéo]' ? (
+          ) : testimonial.message === '[Témoignage vidéo]' ? (
             <span
               className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium mb-2"
               style={{ backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }}
             >
-              🎥 Témoignage vidéo
+              {t.dash.videoTag}
             </span>
           ) : (
             <p className="text-sm leading-relaxed" style={{ color: 'rgba(27,43,94,0.65)' }}>
-              {t.message}
+              {testimonial.message}
             </p>
           )}
 
           <div className="flex items-center gap-2 mt-4 flex-wrap">
             <button
-              onClick={() => onApprove(t.id, t.approved)}
+              onClick={() => onApprove(testimonial.id, testimonial.approved)}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
               style={
-                t.approved === true
+                testimonial.approved === true
                   ? { backgroundColor: 'rgba(200,16,46,0.08)', color: '#C8102E' }
                   : { backgroundColor: '#1B2B5E', color: '#ffffff' }
               }
             >
-              {t.approved === true ? 'Désapprouver' : 'Approuver'}
+              {testimonial.approved === true ? t.dash.unapprove : t.dash.approve}
             </button>
             <button
-              onClick={() => { setRejecting(true); onReject(t.id) }}
+              onClick={() => { setRejecting(true); onReject(testimonial.id) }}
               disabled={rejecting}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-40"
               style={{ color: 'rgba(200,16,46,0.6)' }}
               onMouseEnter={e => (e.target.style.backgroundColor = 'rgba(200,16,46,0.08)')}
               onMouseLeave={e => (e.target.style.backgroundColor = 'transparent')}
             >
-              Rejeter
+              {t.dash.reject}
             </button>
             <span className="text-xs ml-auto" style={{ color: 'rgba(27,43,94,0.3)' }}>{date}</span>
           </div>

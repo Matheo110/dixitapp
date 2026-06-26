@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
+import { useLanguage } from '../context/LanguageContext'
 
 const EMPTY = { name: '', message: '', rating: 0 }
 
@@ -15,29 +16,25 @@ const onBlur  = e => (e.target.style.borderColor = 'rgba(27,43,94,0.2)')
 
 export default function Collect() {
   const { slug: token } = useParams()
+  const { t } = useLanguage()
 
-  // Mode: null | 'text' | 'video'
   const [mode, setMode] = useState(null)
 
-  // Text mode
   const [form, setForm] = useState(EMPTY)
 
-  // Video mode
   const [videoName, setVideoName] = useState('')
   const [videoRating, setVideoRating] = useState(0)
-  const [recordState, setRecordState] = useState('idle') // 'idle' | 'recording' | 'preview'
+  const [recordState, setRecordState] = useState('idle')
   const [videoBlobUrl, setVideoBlobUrl] = useState(null)
   const liveVideoRef = useRef(null)
   const mediaRecorderRef = useRef(null)
   const streamRef = useRef(null)
 
-  // Invitation
   const [invitation, setInvitation] = useState(null)
   const [inviteLoading, setInviteLoading] = useState(true)
   const [invalidLink, setInvalidLink] = useState(false)
   const [ownerProfile, setOwnerProfile] = useState(null)
 
-  // Common
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState(null)
@@ -64,7 +61,7 @@ export default function Collect() {
 
   useEffect(() => {
     return () => {
-      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop())
+      if (streamRef.current) streamRef.current.getTracks().forEach(tk => tk.stop())
       if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl)
     }
   }, [videoBlobUrl])
@@ -75,7 +72,7 @@ export default function Collect() {
   const switchMode = (next) => {
     setMode(next)
     setError(null)
-    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop())
+    if (streamRef.current) streamRef.current.getTracks().forEach(tk => tk.stop())
     if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl)
     setVideoBlobUrl(null)
     setRecordState('idle')
@@ -83,7 +80,6 @@ export default function Collect() {
     streamRef.current = null
   }
 
-  // Attach stream to live video element after React renders it
   useEffect(() => {
     if (recordState === 'recording' && liveVideoRef.current && streamRef.current) {
       liveVideoRef.current.srcObject = streamRef.current
@@ -101,14 +97,14 @@ export default function Collect() {
       mr.onstop = () => {
         const blob = new Blob(chunks, { type: 'video/webm' })
         setVideoBlobUrl(URL.createObjectURL(blob))
-        stream.getTracks().forEach(t => t.stop())
+        stream.getTracks().forEach(tk => tk.stop())
         setRecordState('preview')
       }
       mr.start()
       mediaRecorderRef.current = mr
-      setRecordState('recording') // triggers re-render → <video> mounts → effect sets srcObject
+      setRecordState('recording')
     } catch {
-      setError("Impossible d'accéder à la caméra. Vérifiez les permissions de votre navigateur.")
+      setError(t.collect.errorCamera)
     }
   }
 
@@ -129,16 +125,15 @@ export default function Collect() {
     if (!invitation || !mode) return
 
     const name = (mode === 'text' ? form.name : videoName).trim()
-    if (!name) { setError('Veuillez saisir votre prénom.'); return }
+    if (!name) { setError(t.collect.errorName); return }
     if (mode === 'video' && recordState !== 'preview') {
-      setError('Veuillez enregistrer votre témoignage vidéo avant d\'envoyer.')
+      setError(t.collect.errorVideo)
       return
     }
 
     setLoading(true)
     setError(null)
 
-    // Upload video to Supabase Storage if in video mode
     let videoUrl = null
     if (mode === 'video' && videoBlobUrl) {
       try {
@@ -155,7 +150,7 @@ export default function Collect() {
           .getPublicUrl(filename)
         videoUrl = publicUrl
       } catch (err) {
-        setError(`Erreur lors de l'envoi de la vidéo : ${err.message}`)
+        setError(`${t.collect.errorUpload} : ${err.message}`)
         setLoading(false)
         return
       }
@@ -175,7 +170,7 @@ export default function Collect() {
     const { error } = await supabase.from('testimonials').insert(payload).select()
 
     if (error) {
-      setError(`Erreur : ${error.message}`)
+      setError(`${t.collect.errorGeneric} : ${error.message}`)
       setLoading(false)
     } else {
       await supabase.from('invitations').update({ used: true }).eq('token', token)
@@ -188,7 +183,7 @@ export default function Collect() {
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm" style={{ color: 'rgba(27,43,94,0.45)' }}>Chargement…</p>
+          <p className="text-sm" style={{ color: 'rgba(27,43,94,0.45)' }}>{t.collect.loading}</p>
         </div>
       </div>
     )
@@ -201,10 +196,10 @@ export default function Collect() {
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center max-w-sm">
             <h2 className="font-display font-bold text-2xl mb-3" style={{ color: '#1B2B5E' }}>
-              Lien invalide
+              {t.collect.invalidLink}
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: 'rgba(27,43,94,0.55)' }}>
-              Ce lien est invalide ou a déjà été utilisé.
+              {t.collect.invalidLinkDesc}
             </p>
           </div>
         </div>
@@ -226,9 +221,9 @@ export default function Collect() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="font-display font-bold text-3xl mb-3" style={{ color: '#1B2B5E' }}>Merci !</h2>
+            <h2 className="font-display font-bold text-3xl mb-3" style={{ color: '#1B2B5E' }}>{t.collect.thankYou}</h2>
             <p className="text-sm leading-relaxed" style={{ color: 'rgba(27,43,94,0.55)' }}>
-              Votre témoignage a bien été envoyé et est en attente de validation.
+              {t.collect.submittedDesc}
             </p>
           </div>
         </div>
@@ -273,10 +268,10 @@ export default function Collect() {
               className="font-display font-bold leading-tight mb-3"
               style={{ color: '#1B2B5E', fontSize: '2.5rem' }}
             >
-              Partagez votre expérience
+              {t.collect.shareExperience}
             </h1>
             <p className="text-sm" style={{ color: 'rgba(27,43,94,0.5)' }}>
-              {ownerProfile?.custom_message || 'Votre avis compte. Merci de prendre 2 minutes.'}
+              {ownerProfile?.custom_message || t.collect.defaultMessage}
             </p>
             <div className="mx-auto mt-5 rounded-full" style={{ width: 40, height: 3, backgroundColor: '#C8102E' }} />
           </div>
@@ -290,12 +285,12 @@ export default function Collect() {
               {/* Mode selector */}
               <div>
                 <p className="text-sm font-medium mb-3" style={{ color: '#1B2B5E' }}>
-                  Comment souhaitez-vous laisser votre témoignage ?
+                  {t.collect.modeQuestion}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { key: 'text', icon: '✍️', label: 'Témoignage écrit' },
-                    { key: 'video', icon: '🎥', label: 'Témoignage vidéo' },
+                    { key: 'text', icon: '✍️', label: t.collect.textMode },
+                    { key: 'video', icon: '🎥', label: t.collect.videoMode },
                   ].map(({ key, icon, label }) => (
                     <button
                       key={key}
@@ -320,14 +315,14 @@ export default function Collect() {
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                      Votre prénom <span style={{ color: '#C8102E' }}>*</span>
+                      {t.collect.yourFirstName} <span style={{ color: '#C8102E' }}>*</span>
                     </label>
                     <input
                       type="text"
                       value={form.name}
                       onChange={field('name')}
                       required
-                      placeholder="Votre prénom"
+                      placeholder={t.collect.yourFirstName}
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                       style={inputBase}
                       onFocus={onFocus}
@@ -337,14 +332,14 @@ export default function Collect() {
 
                   <div>
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                      Votre témoignage <span style={{ color: '#C8102E' }}>*</span>
+                      {t.collect.yourTestimonial} <span style={{ color: '#C8102E' }}>*</span>
                     </label>
                     <textarea
                       value={form.message}
                       onChange={field('message')}
                       required
                       rows={5}
-                      placeholder="Votre témoignage…"
+                      placeholder={t.collect.testimonialPlaceholder}
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all resize-none"
                       style={inputBase}
                       onFocus={onFocus}
@@ -354,8 +349,8 @@ export default function Collect() {
 
                   <div>
                     <label className="block text-sm font-medium mb-2.5" style={{ color: '#1B2B5E' }}>
-                      Votre note{' '}
-                      <span className="font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>(optionnel)</span>
+                      {t.collect.yourRating}{' '}
+                      <span className="font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>{t.collect.optional}</span>
                     </label>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map(star => (
@@ -365,7 +360,7 @@ export default function Collect() {
                           onClick={() => setRating(star)}
                           className="text-3xl leading-none transition-transform hover:scale-110 active:scale-95"
                           style={{ color: star <= form.rating ? '#C8102E' : 'rgba(27,43,94,0.2)' }}
-                          aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+                          aria-label={`${star}`}
                         >
                           ★
                         </button>
@@ -379,7 +374,7 @@ export default function Collect() {
                           onMouseEnter={e => (e.target.style.color = 'rgba(27,43,94,0.6)')}
                           onMouseLeave={e => (e.target.style.color = 'rgba(27,43,94,0.35)')}
                         >
-                          Effacer
+                          {t.collect.clear}
                         </button>
                       )}
                     </div>
@@ -392,13 +387,13 @@ export default function Collect() {
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                      Votre prénom <span style={{ color: '#C8102E' }}>*</span>
+                      {t.collect.yourFirstName} <span style={{ color: '#C8102E' }}>*</span>
                     </label>
                     <input
                       type="text"
                       value={videoName}
                       onChange={e => setVideoName(e.target.value)}
-                      placeholder="Votre prénom"
+                      placeholder={t.collect.yourFirstName}
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                       style={inputBase}
                       onFocus={onFocus}
@@ -423,7 +418,7 @@ export default function Collect() {
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                           <circle cx="12" cy="12" r="8" />
                         </svg>
-                        Démarrer l'enregistrement
+                        {t.collect.startRecording}
                       </button>
                     )}
 
@@ -444,7 +439,7 @@ export default function Collect() {
                             className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: '#C8102E', animation: 'pulse 1.5s infinite' }}
                           />
-                          <span className="text-white text-xs font-medium">Enregistrement</span>
+                          <span className="text-white text-xs font-medium">{t.collect.recordingLabel}</span>
                         </div>
                         <div className="absolute bottom-3 inset-x-0 flex justify-center">
                           <button
@@ -455,7 +450,7 @@ export default function Collect() {
                             onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#a80d26')}
                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
                           >
-                            Arrêter et envoyer
+                            {t.collect.stopAndSend}
                           </button>
                         </div>
                       </>
@@ -480,14 +475,14 @@ export default function Collect() {
                       onMouseEnter={e => (e.target.style.color = '#1B2B5E')}
                       onMouseLeave={e => (e.target.style.color = 'rgba(27,43,94,0.4)')}
                     >
-                      ↩ Recommencer l'enregistrement
+                      {t.collect.retake}
                     </button>
                   )}
 
                   <div>
                     <label className="block text-sm font-medium mb-2.5" style={{ color: '#1B2B5E' }}>
-                      Votre note{' '}
-                      <span className="font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>(optionnel)</span>
+                      {t.collect.yourRating}{' '}
+                      <span className="font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>{t.collect.optional}</span>
                     </label>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map(star => (
@@ -497,7 +492,7 @@ export default function Collect() {
                           onClick={() => setVideoRating(prev => prev === star ? 0 : star)}
                           className="text-3xl leading-none transition-transform hover:scale-110 active:scale-95"
                           style={{ color: star <= videoRating ? '#C8102E' : '#888888' }}
-                          aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+                          aria-label={`${star}`}
                         >
                           ★
                         </button>
@@ -511,7 +506,7 @@ export default function Collect() {
                           onMouseEnter={e => (e.target.style.color = 'rgba(27,43,94,0.6)')}
                           onMouseLeave={e => (e.target.style.color = 'rgba(27,43,94,0.35)')}
                         >
-                          Effacer
+                          {t.collect.clear}
                         </button>
                       )}
                     </div>
@@ -541,7 +536,7 @@ export default function Collect() {
                   onMouseEnter={e => !loading && (e.target.style.backgroundColor = '#a80d26')}
                   onMouseLeave={e => (e.target.style.backgroundColor = '#C8102E')}
                 >
-                  {loading ? 'Envoi en cours…' : 'Envoyer mon témoignage'}
+                  {loading ? t.collect.submitting : t.collect.submit}
                 </button>
               )}
 

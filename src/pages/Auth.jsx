@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { generateSlug } from '../lib/slug'
 import Navbar from '../components/Navbar'
+import { useLanguage } from '../context/LanguageContext'
 
 const inputStyle = {
   backgroundColor: '#F5F0E8',
@@ -25,20 +26,11 @@ const EyeOff = () => (
   </svg>
 )
 
-function validatePassword(pw) {
-  const errors = []
-  if (pw.length < 8) errors.push('8 caractères minimum')
-  if (!/[0-9]/.test(pw)) errors.push('Au moins 1 chiffre')
-  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw)) errors.push('Au moins 1 caractère spécial')
-  if (!/[A-Z]/.test(pw)) errors.push('Au moins 1 majuscule')
-  return errors
-}
-
 export default function Auth() {
   const [searchParams] = useSearchParams()
   const [mode, setMode] = useState(searchParams.get('tab') === 'signup' ? 'signup' : 'login')
+  const { t } = useLanguage()
 
-  // Login / signup state
   const [firstName, setFirstName] = useState('')
   const [signupCompany, setSignupCompany] = useState('')
   const [email, setEmail] = useState('')
@@ -48,12 +40,21 @@ export default function Auth() {
   const [message, setMessage] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
 
-  // Forgot password state
   const [resetEmail, setResetEmail] = useState('')
   const [resetSent, setResetSent] = useState(false)
   const [resetError, setResetError] = useState('')
 
   const navigate = useNavigate()
+
+  function validatePassword(pw) {
+    const rules = t.auth.pwRules
+    const errors = []
+    if (pw.length < 8) errors.push(rules[0])
+    if (!/[0-9]/.test(pw)) errors.push(rules[1])
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw)) errors.push(rules[2])
+    if (!/[A-Z]/.test(pw)) errors.push(rules[3])
+    return errors
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,7 +99,7 @@ export default function Auth() {
             slug: generateSlug(nameForSlug),
           })
         }
-        setMessage('Vérifiez votre email pour confirmer votre compte, puis connectez-vous.')
+        setMessage(t.auth.verifyEmail)
         setLoading(false)
       }
     }
@@ -112,7 +113,7 @@ export default function Auth() {
       redirectTo: window.location.origin + '/reset-password',
     })
     console.log('[handleReset] response — data:', data, 'error:', error)
-    if (error) setResetError(error.message || error.toString() || 'Erreur lors de l\'envoi. Veuillez réessayer.')
+    if (error) setResetError(error.message || error.toString() || "Erreur lors de l'envoi. Veuillez réessayer.")
     else setResetSent(true)
   }
 
@@ -140,17 +141,17 @@ export default function Auth() {
                   DIXITAPP
                 </h1>
                 <p className="text-sm mt-1" style={{ color: 'rgba(27,43,94,0.45)' }}>
-                  Collectez des témoignages clients
+                  {t.auth.tagline}
                 </p>
               </div>
 
               {/* ── FORGOT PASSWORD ── */}
               {mode === 'reset' && (
                 <div style={{padding: '2rem', maxWidth: '420px', margin: '0 auto'}}>
-                  <h2 style={{fontFamily: 'Playfair Display', color: '#1B2B5E', marginBottom: '0.5rem'}}>Mot de passe oublié ?</h2>
-                  <p style={{color: '#888', fontSize: '0.85rem', marginBottom: '1.5rem'}}>Entrez votre email pour recevoir un lien de réinitialisation.</p>
+                  <h2 style={{fontFamily: 'Playfair Display', color: '#1B2B5E', marginBottom: '0.5rem'}}>{t.auth.resetTitle}</h2>
+                  <p style={{color: '#888', fontSize: '0.85rem', marginBottom: '1.5rem'}}>{t.auth.resetDesc}</p>
                   {resetSent ? (
-                    <p style={{color: '#1B2B5E', padding: '1rem', background: '#F0F4FF', borderRadius: '6px'}}>Email envoyé ! Vérifiez votre boîte mail.</p>
+                    <p style={{color: '#1B2B5E', padding: '1rem', background: '#F0F4FF', borderRadius: '6px'}}>{t.auth.resetEmailSent}</p>
                   ) : (
                     <form onSubmit={handleReset}>
                       <input
@@ -162,10 +163,10 @@ export default function Auth() {
                         style={{width: '100%', padding: '0.75rem', border: '1.5px solid #E0D8CC', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.9rem'}}
                       />
                       {resetError !== '' && resetError && <p style={{color: '#C8102E', fontSize: '0.8rem', marginBottom: '0.5rem'}}>{resetError}</p>}
-                      <button type="submit" style={{width: '100%', background: '#1B2B5E', color: '#F5F0E8', padding: '0.85rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.9rem'}}>Envoyer le lien</button>
+                      <button type="submit" style={{width: '100%', background: '#1B2B5E', color: '#F5F0E8', padding: '0.85rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.9rem'}}>{t.auth.resetSendLink}</button>
                     </form>
                   )}
-                  <p style={{textAlign: 'center', marginTop: '1rem'}}><button onClick={() => setMode('login')} style={{background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.85rem'}}>Retour à la connexion</button></p>
+                  <p style={{textAlign: 'center', marginTop: '1rem'}}><button onClick={() => setMode('login')} style={{background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.85rem'}}>{t.auth.resetBack}</button></p>
                 </div>
               )}
 
@@ -173,7 +174,7 @@ export default function Auth() {
               {mode !== 'reset' && (
                 <>
                   <div className="flex rounded-xl p-1 mb-7" style={{ backgroundColor: '#F5F0E8' }}>
-                    {[['login', 'Connexion'], ['signup', 'Créer un compte']].map(([val, label]) => (
+                    {[['login', t.auth.loginTab], ['signup', t.auth.signupTab]].map(([val, label]) => (
                       <button
                         key={val}
                         type="button"
@@ -195,13 +196,13 @@ export default function Auth() {
                       <>
                         <div>
                           <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                            Prénom
+                            {t.auth.firstname}
                           </label>
                           <input
                             type="text"
                             value={firstName}
                             onChange={e => setFirstName(e.target.value)}
-                            placeholder="Prénom"
+                            placeholder={t.auth.firstnamePlaceholder}
                             autoComplete="given-name"
                             className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                             style={inputStyle}
@@ -211,7 +212,7 @@ export default function Auth() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                            Nom de votre entreprise{' '}
+                            {t.auth.companyLabel}{' '}
                             <span className="font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>(optionnel)</span>
                           </label>
                           <input
@@ -231,7 +232,7 @@ export default function Auth() {
 
                     <div>
                       <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                        Email
+                        {t.auth.email}
                       </label>
                       <input
                         type="email"
@@ -249,7 +250,7 @@ export default function Auth() {
 
                     <div>
                       <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                        Mot de passe
+                        {t.auth.password}
                       </label>
                       <div style={{ position: 'relative' }}>
                         <input
@@ -259,7 +260,7 @@ export default function Auth() {
                           required
                           minLength={6}
                           autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                          placeholder="Mot de passe"
+                          placeholder={t.auth.passwordPlaceholder}
                           className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                           style={{ ...inputStyle, paddingRight: '2.75rem' }}
                           onFocus={onFocus}
@@ -302,7 +303,7 @@ export default function Auth() {
                           )}
                           {password.length === 0 && (
                             <p className="text-xs" style={{ color: 'rgba(27,43,94,0.35)' }}>
-                              8 caractères minimum, avec chiffre, majuscule et caractère spécial
+                              {t.auth.pwHint}
                             </p>
                           )}
                         </div>
@@ -316,7 +317,7 @@ export default function Auth() {
                             onMouseEnter={e => (e.target.style.textDecoration = 'underline')}
                             onMouseLeave={e => (e.target.style.textDecoration = 'none')}
                           >
-                            Mot de passe oublié ?
+                            {t.auth.forgotPassword}
                           </button>
                         </div>
                       )}
@@ -356,8 +357,8 @@ export default function Auth() {
                       onMouseLeave={e => (e.target.style.backgroundColor = '#C8102E')}
                     >
                       {loading
-                        ? 'Veuillez patienter…'
-                        : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+                        ? t.auth.loadingBtn
+                        : mode === 'login' ? t.auth.signIn : t.auth.createAccount}
                     </button>
                   </form>
                 </>

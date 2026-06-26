@@ -2,44 +2,46 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
-
-const plans = [
-  {
-    key: 'free',
-    name: 'Free',
-    price: '0€',
-    period: '/mois',
-    features: ['5 témoignages', 'Widget avec branding', 'Texte uniquement'],
-    cta: 'Commencer gratuitement',
-    featured: false,
-    priceId: null,
-  },
-  {
-    key: 'pro',
-    name: 'Pro',
-    price: '29€',
-    period: '/mois',
-    features: ['Témoignages illimités', 'Vidéo + texte', 'Sans branding', 'Support prioritaire'],
-    cta: 'Choisir Pro',
-    featured: true,
-    priceId: 'price_1Tl6wCIxd1EjjYKHZiUCdX69',
-  },
-  {
-    key: 'agency',
-    name: 'Agency',
-    price: '79€',
-    period: '/mois',
-    features: ['Multi-comptes', 'White label', 'Accès API', 'Onboarding dédié'],
-    cta: 'Choisir Agency',
-    featured: false,
-    priceId: 'price_1Tl6xmIxd1EjjYKHqEEKndhX',
-  },
-]
+import { useLanguage } from '../context/LanguageContext'
 
 export default function Pricing() {
   const [loading, setLoading] = useState(null)
   const [checkoutError, setCheckoutError] = useState(null)
   const navigate = useNavigate()
+  const { t } = useLanguage()
+
+  const plans = [
+    {
+      key: 'free',
+      name: 'Free',
+      price: '0€',
+      period: t.pricing.perMonth,
+      features: t.pricing.features.free,
+      cta: t.pricing.ctaFree,
+      featured: false,
+      priceId: null,
+    },
+    {
+      key: 'pro',
+      name: 'Pro',
+      price: '29€',
+      period: t.pricing.perMonth,
+      features: t.pricing.features.pro,
+      cta: t.pricing.ctaPro,
+      featured: true,
+      priceId: 'price_1Tl6wCIxd1EjjYKHZiUCdX69',
+    },
+    {
+      key: 'agency',
+      name: 'Agency',
+      price: '79€',
+      period: t.pricing.perMonth,
+      features: t.pricing.features.agency,
+      cta: t.pricing.ctaAgency,
+      featured: false,
+      priceId: 'price_1Tl6xmIxd1EjjYKHqEEKndhX',
+    },
+  ]
 
   const handleCheckout = async (plan) => {
     if (!plan.priceId) {
@@ -56,7 +58,7 @@ export default function Pricing() {
       },
     })
     if (error || !data?.url) {
-      setCheckoutError('Impossible de démarrer le paiement. Réessayez.')
+      setCheckoutError(t.pricing.checkoutError)
       setLoading(null)
       return
     }
@@ -74,15 +76,15 @@ export default function Pricing() {
             onClick={() => navigate('/dashboard')}
             style={{ background: 'none', border: 'none', color: '#1B2B5E', fontSize: '0.85rem', cursor: 'pointer', padding: 0, marginBottom: '2rem', display: 'inline-block' }}
           >
-            ← Retour au dashboard
+            {t.pricing.backToDashboard}
           </button>
 
           <div className="text-center mb-12">
             <h1 className="font-display font-bold text-4xl mb-4" style={{ color: '#1B2B5E' }}>
-              Choisissez votre plan
+              {t.pricing.title}
             </h1>
             <p className="text-sm" style={{ color: 'rgba(27,43,94,0.55)' }}>
-              Commencez gratuitement, passez à Pro quand vous êtes prêt.
+              {t.pricing.subtitle}
             </p>
             <div className="mx-auto mt-5 rounded-full" style={{ width: 40, height: 3, backgroundColor: '#C8102E' }} />
           </div>
@@ -122,7 +124,7 @@ export default function Pricing() {
                       className="text-xs font-semibold px-3 py-1 rounded-full"
                       style={{ backgroundColor: '#C8102E', color: '#ffffff' }}
                     >
-                      Recommandé
+                      {t.pricing.recommended}
                     </span>
                   </div>
                 )}
@@ -171,7 +173,7 @@ export default function Pricing() {
                   onMouseEnter={e => { if (loading !== plan.key) e.currentTarget.style.opacity = '0.85' }}
                   onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                 >
-                  {loading === plan.key ? 'Chargement…' : plan.cta}
+                  {loading === plan.key ? t.pricing.loading : plan.cta}
                 </button>
               </div>
             ))}
