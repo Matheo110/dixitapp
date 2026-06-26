@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { client_email, client_name, collect_link, custom_message, owner_name } = await req.json()
+    const { client_email, client_name, collect_link, custom_message, owner_name, lang } = await req.json()
 
     if (!client_email || !collect_link) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -21,9 +21,32 @@ Deno.serve(async (req) => {
     const brevoKey = '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'
 
     const senderName = owner_name || 'Dixitapp'
-    const greeting = client_name ? `Bonjour ${client_name},` : 'Bonjour,'
-    const bodyMessage = custom_message ||
-      `Je serais ravi(e) d'avoir votre avis sur notre collaboration. Cela ne prendra que 2 minutes !`
+    const isEn = lang === 'en'
+
+    let greeting: string
+    let bodyMessage: string
+    let ctaLabel: string
+    let copyLabel: string
+    let subject: string
+    let footerLabel: string
+
+    if (isEn) {
+      greeting = client_name ? `Hello ${client_name},` : 'Hello,'
+      bodyMessage = custom_message ||
+        `I would love to get your feedback on our collaboration. It will only take 2 minutes!`
+      ctaLabel = 'Leave my testimonial →'
+      copyLabel = 'Or copy this link into your browser:'
+      subject = `${senderName} invites you to leave a testimonial`
+      footerLabel = `Powered by ${senderName}`
+    } else {
+      greeting = client_name ? `Bonjour ${client_name},` : 'Bonjour,'
+      bodyMessage = custom_message ||
+        `Je serais ravi(e) d'avoir votre avis sur notre collaboration. Cela ne prendra que 2 minutes !`
+      ctaLabel = 'Laisser mon témoignage →'
+      copyLabel = 'Ou copiez ce lien dans votre navigateur :'
+      subject = `${senderName} vous invite à laisser un témoignage`
+      footerLabel = `Propulsé par ${senderName}`
+    }
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 24px; background: #ffffff;">
@@ -39,12 +62,12 @@ Deno.serve(async (req) => {
             href="${collect_link}"
             style="display: inline-block; background-color: #1B2B5E; color: #F5F0E8; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 600;"
           >
-            Laisser mon témoignage →
+            ${ctaLabel}
           </a>
         </div>
 
         <p style="color: #888; font-size: 12px; line-height: 1.6; margin-bottom: 4px;">
-          Ou copiez ce lien dans votre navigateur :
+          ${copyLabel}
         </p>
         <p style="color: #999; font-size: 11px; word-break: break-all; margin-bottom: 32px;">
           ${collect_link}
@@ -52,7 +75,7 @@ Deno.serve(async (req) => {
 
         <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center;">
           <p style="color: #d0d0d0; font-size: 10px; margin: 0; letter-spacing: 0.03em;">
-            Propulsé par ${senderName}
+            ${footerLabel}
           </p>
         </div>
       </div>
@@ -67,7 +90,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         sender: { name: senderName, email: 'hello@dixitapp.tech' },
         to: [{ email: client_email, name: client_name || undefined }],
-        subject: `${senderName} vous invite à laisser un témoignage`,
+        subject,
         htmlContent,
       }),
     })

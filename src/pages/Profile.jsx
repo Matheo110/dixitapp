@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
+import { useLanguage } from '../context/LanguageContext'
 
 const FONT_FAMILY = {
   'Playfair Display': "'Playfair Display', Georgia, serif",
@@ -24,6 +25,7 @@ const onFocus = e => (e.target.style.borderColor = 'rgba(27,43,94,0.5)')
 const onBlur  = e => (e.target.style.borderColor = 'rgba(27,43,94,0.2)')
 
 export default function Profile() {
+  const { t } = useLanguage()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,11 +35,9 @@ export default function Profile() {
   const [firstname, setFirstname] = useState('')
   const [company, setCompany] = useState('')
   const [activity, setActivity] = useState('')
-
   const [avatarUrl, setAvatarUrl] = useState('')
 
-  // Wall customization
-  const [wallTitle, setWallTitle] = useState('Témoignages de nos clients')
+  const [wallTitle, setWallTitle] = useState('')
   const [wallBgColor, setWallBgColor] = useState('#F5F0E8')
   const [wallPrimaryColor, setWallPrimaryColor] = useState('#1B2B5E')
   const [wallAccentColor, setWallAccentColor] = useState('#C8102E')
@@ -60,9 +60,8 @@ export default function Profile() {
           setFirstname(data?.firstname || user.user_metadata?.first_name || '')
           setCompany(data?.company || '')
           setActivity(data?.activity || '')
-
           setAvatarUrl(data?.avatar_url || '')
-          setWallTitle(data?.wall_title || 'Témoignages de nos clients')
+          setWallTitle(data?.wall_title || '')
           setWallBgColor(data?.wall_bg_color || '#F5F0E8')
           setWallPrimaryColor(data?.wall_primary_color || '#1B2B5E')
           setWallAccentColor(data?.wall_accent_color || '#C8102E')
@@ -85,9 +84,8 @@ export default function Profile() {
         firstname: firstname.trim() || null,
         company: company.trim() || null,
         activity: activity.trim() || null,
-
         avatar_url: avatarUrl.trim() || null,
-        wall_title: wallTitle.trim() || 'Témoignages de nos clients',
+        wall_title: wallTitle.trim() || null,
         wall_bg_color: wallBgColor,
         wall_primary_color: wallPrimaryColor,
         wall_accent_color: wallAccentColor,
@@ -108,7 +106,7 @@ export default function Profile() {
       onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
       onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
     >
-      ← Retour au dashboard
+      {t.profile.backToDashboard}
     </button>
   )
 
@@ -117,11 +115,17 @@ export default function Profile() {
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
         <Navbar right={navRight} />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm" style={{ color: 'rgba(27,43,94,0.45)' }}>Chargement…</p>
+          <p className="text-sm" style={{ color: 'rgba(27,43,94,0.45)' }}>{t.profile.loading}</p>
         </div>
       </div>
     )
   }
+
+  const colorLabels = [
+    { label: t.profile.colorBg, value: wallBgColor, set: setWallBgColor },
+    { label: t.profile.colorPrimary, value: wallPrimaryColor, set: setWallPrimaryColor },
+    { label: t.profile.colorAccent, value: wallAccentColor, set: setWallAccentColor },
+  ]
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
@@ -132,7 +136,7 @@ export default function Profile() {
           className="font-display font-bold text-3xl mb-8"
           style={{ color: '#1B2B5E' }}
         >
-          Mon profil
+          {t.profile.title}
         </h1>
 
         <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
@@ -142,13 +146,13 @@ export default function Profile() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                Prénom
+                {t.profile.firstname}
               </label>
               <input
                 type="text"
                 value={firstname}
                 onChange={e => setFirstname(e.target.value)}
-                placeholder="Votre prénom"
+                placeholder={t.profile.firstnamePlaceholder}
                 style={inputStyle}
                 onFocus={onFocus}
                 onBlur={onBlur}
@@ -157,13 +161,13 @@ export default function Profile() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                Nom de mon entreprise
+                {t.profile.company}
               </label>
               <input
                 type="text"
                 value={company}
                 onChange={e => setCompany(e.target.value)}
-                placeholder="Ex : Studio Créatif Paris"
+                placeholder={t.profile.companyPlaceholder}
                 style={inputStyle}
                 onFocus={onFocus}
                 onBlur={onBlur}
@@ -172,25 +176,24 @@ export default function Profile() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                Mon métier / activité
+                {t.profile.activity}
               </label>
               <input
                 type="text"
                 value={activity}
                 onChange={e => setActivity(e.target.value)}
-                placeholder="Ex : Développeur web freelance"
+                placeholder={t.profile.activityPlaceholder}
                 style={inputStyle}
                 onFocus={onFocus}
                 onBlur={onBlur}
               />
             </div>
 
-
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                Photo de profil
+                {t.profile.avatarUrl}
                 <span className="ml-1 font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>
-                  — URL optionnelle
+                  {t.profile.avatarUrlNote}
                 </span>
               </label>
               <input
@@ -206,11 +209,11 @@ export default function Profile() {
                 <div className="mt-3 flex items-center gap-3">
                   <img
                     src={avatarUrl}
-                    alt="Aperçu"
+                    alt={t.profile.avatarPreview}
                     style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(27,43,94,0.15)' }}
                     onError={e => (e.currentTarget.style.display = 'none')}
                   />
-                  <span className="text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>Aperçu de votre photo</span>
+                  <span className="text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>{t.profile.avatarPreview}</span>
                 </div>
               )}
             </div>
@@ -218,20 +221,20 @@ export default function Profile() {
             {/* ── WALL CUSTOMIZATION ── */}
             <div style={{ borderTop: '1px solid rgba(27,43,94,0.1)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
               <h2 className="font-display font-semibold text-lg mb-5" style={{ color: '#1B2B5E' }}>
-                Personnaliser mon mur public
+                {t.profile.wallSection}
               </h2>
 
               <div className="space-y-5">
 
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                    Titre du mur
+                    {t.profile.wallTitle}
                   </label>
                   <input
                     type="text"
                     value={wallTitle}
                     onChange={e => setWallTitle(e.target.value)}
-                    placeholder="Ex : Ce que disent mes clients"
+                    placeholder={t.profile.wallTitlePlaceholder}
                     style={inputStyle}
                     onFocus={onFocus}
                     onBlur={onBlur}
@@ -240,14 +243,10 @@ export default function Profile() {
 
                 <div>
                   <label className="block text-sm font-medium mb-3" style={{ color: '#1B2B5E' }}>
-                    Couleurs
+                    {t.profile.colors}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {[
-                      { label: 'Fond', value: wallBgColor, set: setWallBgColor },
-                      { label: 'Principale', value: wallPrimaryColor, set: setWallPrimaryColor },
-                      { label: 'Accent', value: wallAccentColor, set: setWallAccentColor },
-                    ].map(({ label, value, set }) => (
+                    {colorLabels.map(({ label, value, set }) => (
                       <div key={label}>
                         <p className="text-xs mb-2" style={{ color: 'rgba(27,43,94,0.5)' }}>{label}</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -271,7 +270,7 @@ export default function Profile() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>Police</label>
+                    <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>{t.profile.font}</label>
                     <select
                       value={wallFont}
                       onChange={e => setWallFont(e.target.value)}
@@ -283,14 +282,14 @@ export default function Profile() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>Disposition</label>
+                    <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>{t.profile.layout}</label>
                     <select
                       value={wallLayout}
                       onChange={e => setWallLayout(e.target.value)}
                       style={{ ...inputStyle, cursor: 'pointer' }}
                     >
-                      <option value="grid">Grille</option>
-                      <option value="list">Liste</option>
+                      <option value="grid">{t.profile.layoutGrid}</option>
+                      <option value="list">{t.profile.layoutList}</option>
                     </select>
                   </div>
                 </div>
@@ -298,19 +297,19 @@ export default function Profile() {
                 {/* Live preview */}
                 <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(27,43,94,0.1)' }}>
                   <div style={{ padding: '0.6rem 1rem', backgroundColor: '#f4f4f4', borderBottom: '1px solid rgba(27,43,94,0.07)' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'rgba(27,43,94,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aperçu</span>
+                    <span style={{ fontSize: '0.7rem', color: 'rgba(27,43,94,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t.profile.preview}</span>
                   </div>
                   <div style={{ backgroundColor: wallBgColor, padding: '1.5rem' }}>
                     <p style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: wallAccentColor, marginBottom: '0.5rem' }}>
-                      Avis clients
+                      {t.profile.previewReview}
                     </p>
                     <h3 style={{ fontFamily: FONT_FAMILY[wallFont], fontWeight: 700, color: wallPrimaryColor, fontSize: '1.1rem', marginBottom: '1.25rem' }}>
-                      {wallTitle || 'Témoignages de nos clients'}
+                      {wallTitle || t.wall.defaultTitle}
                     </h3>
                     <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '1rem', border: `1px solid ${wallPrimaryColor}18`, boxShadow: `0 1px 4px ${wallPrimaryColor}0f` }}>
                       <div style={{ fontFamily: FONT_FAMILY[wallFont], fontSize: '2.5rem', lineHeight: 1, color: `${wallAccentColor}40`, marginBottom: '0.4rem' }}>"</div>
                       <p style={{ fontSize: '0.8rem', color: `${wallPrimaryColor}b3`, lineHeight: 1.55, marginBottom: '0.75rem' }}>
-                        Super prestation, très satisfait ! Je recommande vivement.
+                        {t.profile.previewQuote}
                       </p>
                       <div style={{ display: 'flex', gap: '2px', marginBottom: '0.75rem' }}>
                         {[1,2,3,4,5].map(i => <span key={i} style={{ color: wallAccentColor, fontSize: '0.85rem' }}>★</span>)}
@@ -340,7 +339,7 @@ export default function Profile() {
                 className="text-sm rounded-xl px-4 py-3"
                 style={{ color: '#1B2B5E', backgroundColor: 'rgba(27,43,94,0.07)', border: '1px solid rgba(27,43,94,0.15)' }}
               >
-                Profil enregistré avec succès.
+                {t.profile.saved}
               </div>
             )}
 
@@ -353,7 +352,7 @@ export default function Profile() {
                 onMouseEnter={e => !saving && (e.currentTarget.style.opacity = '0.85')}
                 onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
               >
-                {saving ? 'Enregistrement…' : 'Enregistrer'}
+                {saving ? t.profile.saving : t.profile.save}
               </button>
               <button
                 type="button"
@@ -362,14 +361,14 @@ export default function Profile() {
                   setWallPrimaryColor('#1B2B5E')
                   setWallAccentColor('#C8102E')
                   setWallFont('Playfair Display')
-                  setWallTitle('Témoignages de nos clients')
+                  setWallTitle('')
                   setWallLayout('grid')
                 }}
                 style={{ background: 'transparent', border: '1px solid #888', color: '#888', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#555' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#888'; e.currentTarget.style.color = '#888' }}
               >
-                Réinitialiser les couleurs par défaut
+                {t.profile.reset}
               </button>
             </div>
 

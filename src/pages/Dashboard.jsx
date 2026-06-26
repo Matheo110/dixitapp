@@ -148,6 +148,7 @@ export default function Dashboard() {
             collect_link: link,
             custom_message: inviteMessage.trim() || null,
             owner_name: profile?.company || profile?.firstname || user?.email,
+            lang,
           },
         })
         if (emailError) {
