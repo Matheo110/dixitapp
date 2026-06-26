@@ -272,6 +272,32 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── SOCIAL PROOF ── */}
+      <section style={{ backgroundColor: '#F5F0E8', padding: '3rem 2rem', borderTop: '1px solid #E0D8CC' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
+          <RevealDiv>
+            <p style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.4rem', color: '#1B2B5E', marginBottom: '0.5rem' }}>
+              {lang === 'en' ? 'They trust us' : 'Ils nous font confiance'}
+            </p>
+            <p style={{ fontSize: '0.875rem', color: '#888', marginBottom: '2rem' }}>
+              {lang === 'en'
+                ? 'French freelancers and agencies use Dixitapp every day'
+                : 'Des freelances et agences français utilisent Dixitapp au quotidien'}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
+              {['Studio Créatif', 'Agence Web Lyon', 'Design & Co', 'FreelancePro', 'Atelier Numérique', 'Conseil & Stratégie'].map(name => (
+                <div
+                  key={name}
+                  style={{ backgroundColor: '#ffffff', border: '1px solid #E0D8CC', borderRadius: '8px', padding: '1rem 1.5rem', fontFamily: 'Inter, sans-serif', color: '#1B2B5E', fontWeight: 500, fontSize: '0.875rem' }}
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+          </RevealDiv>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ── */}
       <section style={{ backgroundColor: '#ffffff', padding: '5rem 1.5rem' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
