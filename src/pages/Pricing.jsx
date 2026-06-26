@@ -22,7 +22,7 @@ const plans = [
     features: ['Témoignages illimités', 'Vidéo + texte', 'Sans branding', 'Support prioritaire'],
     cta: 'Choisir Pro',
     featured: true,
-    priceId: 'price_1TmUdKIBdaudLYGbJmxaSauE',
+    priceId: 'price_1TmV3iIBdaudLYGbTTF0OSEq',
   },
   {
     key: 'agency',
@@ -32,7 +32,7 @@ const plans = [
     features: ['Multi-comptes', 'White label', 'Accès API', 'Onboarding dédié'],
     cta: 'Choisir Agency',
     featured: false,
-    priceId: 'price_1TmUdeIBdaudLYGbuTXoTL0u',
+    priceId: 'price_1TmV3TIBdaudLYGbI9ykOCHA',
   },
 ]
 
