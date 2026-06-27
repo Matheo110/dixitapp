@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [showStats, setShowStats] = useState(false)
   const [autoReminder, setAutoReminder] = useState(true)
   const [copiedEmbed, setCopiedEmbed] = useState(null)
+  const [showEmbed, setShowEmbed] = useState(false)
   const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
@@ -652,7 +653,30 @@ export default function Dashboard() {
 
         {/* Embed section */}
         {user && (
-          <div className="bg-white mb-8 rounded-2xl" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+          <div className="mb-8">
+          <button
+            onClick={() => setShowEmbed(s => !s)}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(27,43,94,0.2)',
+              color: '#1B2B5E',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              marginBottom: showEmbed ? '1.25rem' : '0',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(27,43,94,0.05)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            {showEmbed
+              ? (lang === 'en' ? 'Hide ▲' : 'Masquer ▲')
+              : (lang === 'en' ? 'Embed on my website ▼' : 'Intégrer sur mon site ▼')}
+          </button>
+
+          {showEmbed && (
+          <div className="bg-white rounded-2xl" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
             <div className="p-6">
               <h3 className="font-display font-semibold text-lg mb-1" style={{ color: '#1B2B5E' }}>
                 {lang === 'en' ? 'Embed on my website' : 'Intégrer sur mon site'}
@@ -730,6 +754,8 @@ export default function Dashboard() {
                   : 'Compatible avec WordPress, Wix, Squarespace et tous les CMS'}
               </p>
             </div>
+          </div>
+          )}
           </div>
         )}
 
