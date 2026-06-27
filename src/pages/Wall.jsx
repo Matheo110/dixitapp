@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLanguage } from '../context/LanguageContext'
@@ -17,7 +17,9 @@ export default function Wall() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [copiedWall, setCopiedWall] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [copiedSource, setCopiedSource] = useState(null)
+  const shareRef = useRef(null)
 
   useEffect(() => {
     Promise.all([
@@ -39,6 +41,17 @@ export default function Wall() {
       setLoading(false)
     })
   }, [slug])
+
+  useEffect(() => {
+    if (!showShareMenu) return
+    const handler = (e) => {
+      if (shareRef.current && !shareRef.current.contains(e.target)) {
+        setShowShareMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showShareMenu])
 
   const bg      = profile?.wall_bg_color     || '#F5F0E8'
   const primary = profile?.wall_primary_color || '#1B2B5E'
@@ -111,65 +124,124 @@ export default function Wall() {
       {/* ── SHARING ── */}
       <div style={{ backgroundColor: bg, borderBottom: `1px solid ${primary}14`, padding: '1rem 1.5rem' }}>
         <div style={{ maxWidth: '1152px', margin: '0 auto' }}>
-          <p style={{ fontSize: '0.75rem', color: `${primary}70`, marginBottom: '0.6rem', fontWeight: 500 }}>
-            {lang === 'en' ? 'Share this testimonials wall' : 'Partagez ce mur de témoignages'}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }} ref={shareRef}>
 
-            {/* LinkedIn */}
-            <a
-              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
-              target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#0077B5', color: '#ffffff', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 500, textDecoration: 'none' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              {lang === 'en' ? 'Share on LinkedIn' : 'Partager sur LinkedIn'}
-            </a>
-
-            {/* Twitter / X */}
-            <a
-              href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(lang === 'en' ? 'Check out my customer testimonials' : 'Découvrez mes témoignages clients')}`}
-              target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#000000', color: '#ffffff', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 500, textDecoration: 'none' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-              {lang === 'en' ? 'Share on X' : 'Partager sur X'}
-            </a>
-
-            {/* Facebook */}
-            <a
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
-              target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#1877F2', color: '#ffffff', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 500, textDecoration: 'none' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              {lang === 'en' ? 'Share on Facebook' : 'Partager sur Facebook'}
-            </a>
-
-            {/* Copy link */}
+            {/* Main toggle button */}
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href)
-                setCopiedWall(true)
-                setTimeout(() => setCopiedWall(false), 2000)
-              }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: primary, color: bg, padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+              onClick={() => setShowShareMenu(s => !s)}
+              style={{ backgroundColor: primary, color: bg, padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-              {copiedWall
-                ? (lang === 'en' ? 'Copied ✓' : 'Copié ✓')
-                : (lang === 'en' ? 'Copy link' : 'Copier le lien')}
+              {lang === 'en' ? 'Share 🔗' : 'Partager 🔗'}
             </button>
 
+            {/* Dropdown */}
+            {showShareMenu && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, backgroundColor: '#ffffff', border: '1px solid #E0D8CC', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '230px', zIndex: 20, overflow: 'hidden' }}>
+
+                {/* LinkedIn */}
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  onClick={() => setShowShareMenu(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', textDecoration: 'none', color: '#1B2B5E', fontSize: '0.875rem', fontWeight: 500 }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#0077B5">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                  LinkedIn
+                </a>
+
+                {/* X (Twitter) */}
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(lang === 'en' ? 'Check out my customer testimonials' : 'Découvrez mes témoignages clients')}`}
+                  target="_blank" rel="noopener noreferrer"
+                  onClick={() => setShowShareMenu(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', textDecoration: 'none', color: '#1B2B5E', fontSize: '0.875rem', fontWeight: 500 }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  X (Twitter)
+                </a>
+
+                {/* Facebook */}
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  onClick={() => setShowShareMenu(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', textDecoration: 'none', color: '#1B2B5E', fontSize: '0.875rem', fontWeight: 500 }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  Facebook
+                </a>
+
+                {/* Instagram — copy link + message */}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href)
+                    setCopiedSource('instagram')
+                    setShowShareMenu(false)
+                    setTimeout(() => setCopiedSource(null), 3500)
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', width: '100%', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: '#1B2B5E', fontSize: '0.875rem', fontWeight: 500, textAlign: 'left' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <defs>
+                      <linearGradient id="ig-grad-wall" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#f09433"/>
+                        <stop offset="50%" stopColor="#dc2743"/>
+                        <stop offset="100%" stopColor="#bc1888"/>
+                      </linearGradient>
+                    </defs>
+                    <path fill="url(#ig-grad-wall)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                  Instagram
+                </button>
+
+                {/* Copy link */}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href)
+                    setCopiedSource('link')
+                    setTimeout(() => setCopiedSource(null), 2000)
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', width: '100%', border: 'none', borderTop: '1px solid #E0D8CC', backgroundColor: 'transparent', cursor: 'pointer', color: '#1B2B5E', fontSize: '0.875rem', fontWeight: 500, textAlign: 'left' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2B5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  {copiedSource === 'link'
+                    ? (lang === 'en' ? 'Copied ✓' : 'Copié ✓')
+                    : (lang === 'en' ? 'Copy link' : 'Copier le lien')}
+                </button>
+
+              </div>
+            )}
           </div>
+
+          {/* Confirmation messages */}
+          {copiedSource === 'link' && (
+            <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: `${primary}90`, fontWeight: 500 }}>
+              {lang === 'en' ? 'Link copied ✓' : 'Lien copié ✓'}
+            </p>
+          )}
+          {copiedSource === 'instagram' && (
+            <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: `${primary}90`, fontWeight: 500 }}>
+              {lang === 'en' ? 'Link copied! Share it on Instagram 📸' : 'Lien copié ! Partagez-le sur Instagram 📸'}
+            </p>
+          )}
         </div>
       </div>
 
