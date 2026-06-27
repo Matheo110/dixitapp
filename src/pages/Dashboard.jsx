@@ -355,8 +355,8 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Statistics section */}
-        <div className="mb-8">
+        {/* Toggle buttons row */}
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <button
             onClick={() => setShowStats(s => !s)}
             style={{
@@ -368,7 +368,6 @@ export default function Dashboard() {
               fontSize: '0.85rem',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              marginBottom: showStats ? '1.25rem' : '0',
             }}
             onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(27,43,94,0.05)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -377,8 +376,30 @@ export default function Dashboard() {
               ? (lang === 'en' ? 'Hide statistics ▲' : 'Masquer les statistiques ▲')
               : (lang === 'en' ? 'Show statistics ▼' : 'Voir les statistiques ▼')}
           </button>
+          {user && (
+          <button
+            onClick={() => setShowEmbed(s => !s)}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(27,43,94,0.2)',
+              color: '#1B2B5E',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(27,43,94,0.05)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            {showEmbed
+              ? (lang === 'en' ? 'Hide ▲' : 'Masquer ▲')
+              : (lang === 'en' ? 'Embed on my website ▼' : 'Intégrer sur mon site ▼')}
+          </button>
+          )}
+        </div>
 
-          {showStats && (
+        {showStats && (
           <div style={{ animation: 'statsReveal 0.3s ease both' }}>
 
           {/* Response rate + avg rating cards */}
@@ -486,7 +507,70 @@ export default function Dashboard() {
 
           </div>
           )}
-        </div>
+
+        {user && showEmbed && (
+          <div className="bg-white rounded-2xl mb-8" style={{ border: '1px solid rgba(27,43,94,0.1)', animation: 'statsReveal 0.3s ease both' }}>
+            <div className="p-6">
+              <h3 className="font-display font-semibold text-lg mb-1" style={{ color: '#1B2B5E' }}>
+                {lang === 'en' ? 'Embed on my website' : 'Intégrer sur mon site'}
+              </h3>
+              <p className="text-sm mb-5" style={{ color: 'rgba(27,43,94,0.5)' }}>
+                {lang === 'en'
+                  ? 'Copy this code and paste it on your website to display your testimonials automatically'
+                  : 'Copiez ce code et collez-le sur votre site pour afficher vos témoignages automatiquement'}
+              </p>
+
+              {/* iFrame option */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(27,43,94,0.4)' }}>
+                  iFrame <span style={{ color: '#C8102E' }}>({lang === 'en' ? 'recommended' : 'recommandé'})</span>
+                </p>
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 rounded-lg overflow-x-auto" style={{ backgroundColor: '#1B2B5E', padding: '1rem', borderRadius: '8px' }}>
+                    <code style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#F5F0E8', whiteSpace: 'pre', display: 'block' }}>
+                      {`<iframe src="https://dixitapp.tech/wall/${user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`}
+                    </code>
+                  </div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`<iframe src="https://dixitapp.tech/wall/${user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`); setCopiedEmbed('iframe'); setTimeout(() => setCopiedEmbed(null), 2000) }}
+                    className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg transition-all"
+                    style={copiedEmbed === 'iframe' ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' } : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
+                  >
+                    {copiedEmbed === 'iframe' ? (lang === 'en' ? 'Copied ✓' : 'Copié ✓') : (lang === 'en' ? 'Copy' : 'Copier')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Direct link option */}
+              <div className="mb-5">
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(27,43,94,0.4)' }}>
+                  {lang === 'en' ? 'Direct link' : 'Lien direct'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-lg overflow-x-auto" style={{ backgroundColor: '#1B2B5E', padding: '1rem', borderRadius: '8px' }}>
+                    <code style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#F5F0E8', whiteSpace: 'nowrap', display: 'block' }}>
+                      {`https://dixitapp.tech/wall/${user.id}`}
+                    </code>
+                  </div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`https://dixitapp.tech/wall/${user.id}`); setCopiedEmbed('link'); setTimeout(() => setCopiedEmbed(null), 2000) }}
+                    className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg transition-all"
+                    style={copiedEmbed === 'link' ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' } : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
+                  >
+                    {copiedEmbed === 'link' ? (lang === 'en' ? 'Copied ✓' : 'Copié ✓') : (lang === 'en' ? 'Copy' : 'Copier')}
+                  </button>
+                </div>
+              </div>
+
+              {/* CMS note */}
+              <p className="text-xs" style={{ color: 'rgba(27,43,94,0.35)' }}>
+                💡 {lang === 'en'
+                  ? 'Compatible with WordPress, Wix, Squarespace and all CMS'
+                  : 'Compatible avec WordPress, Wix, Squarespace et tous les CMS'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Invite section */}
         <div className="bg-white mb-8 rounded-2xl" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
@@ -650,114 +734,6 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-
-        {/* Embed section */}
-        {user && (
-          <div className="mb-8">
-          <button
-            onClick={() => setShowEmbed(s => !s)}
-            style={{
-              background: 'transparent',
-              border: '1px solid rgba(27,43,94,0.2)',
-              color: '#1B2B5E',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              marginBottom: showEmbed ? '1.25rem' : '0',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(27,43,94,0.05)')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-          >
-            {showEmbed
-              ? (lang === 'en' ? 'Hide ▲' : 'Masquer ▲')
-              : (lang === 'en' ? 'Embed on my website ▼' : 'Intégrer sur mon site ▼')}
-          </button>
-
-          {showEmbed && (
-          <div className="bg-white rounded-2xl" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
-            <div className="p-6">
-              <h3 className="font-display font-semibold text-lg mb-1" style={{ color: '#1B2B5E' }}>
-                {lang === 'en' ? 'Embed on my website' : 'Intégrer sur mon site'}
-              </h3>
-              <p className="text-sm mb-5" style={{ color: 'rgba(27,43,94,0.5)' }}>
-                {lang === 'en'
-                  ? 'Copy this code and paste it on your website to display your testimonials automatically'
-                  : 'Copiez ce code et collez-le sur votre site pour afficher vos témoignages automatiquement'}
-              </p>
-
-              {/* iFrame option */}
-              <div className="mb-4">
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(27,43,94,0.4)' }}>
-                  iFrame <span style={{ color: '#C8102E' }}>({lang === 'en' ? 'recommended' : 'recommandé'})</span>
-                </p>
-                <div className="flex items-start gap-2">
-                  <div
-                    className="flex-1 rounded-lg overflow-x-auto"
-                    style={{ backgroundColor: '#1B2B5E', padding: '1rem', borderRadius: '8px' }}
-                  >
-                    <code style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#F5F0E8', whiteSpace: 'pre', display: 'block' }}>
-                      {`<iframe src="https://dixitapp.tech/wall/${user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`}
-                    </code>
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`<iframe src="https://dixitapp.tech/wall/${user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`)
-                      setCopiedEmbed('iframe')
-                      setTimeout(() => setCopiedEmbed(null), 2000)
-                    }}
-                    className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg transition-all"
-                    style={copiedEmbed === 'iframe'
-                      ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }
-                      : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
-                  >
-                    {copiedEmbed === 'iframe' ? (lang === 'en' ? 'Copied ✓' : 'Copié ✓') : (lang === 'en' ? 'Copy' : 'Copier')}
-                  </button>
-                </div>
-              </div>
-
-              {/* Direct link option */}
-              <div className="mb-5">
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(27,43,94,0.4)' }}>
-                  {lang === 'en' ? 'Direct link' : 'Lien direct'}
-                </p>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="flex-1 rounded-lg overflow-x-auto"
-                    style={{ backgroundColor: '#1B2B5E', padding: '1rem', borderRadius: '8px' }}
-                  >
-                    <code style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#F5F0E8', whiteSpace: 'nowrap', display: 'block' }}>
-                      {`https://dixitapp.tech/wall/${user.id}`}
-                    </code>
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`https://dixitapp.tech/wall/${user.id}`)
-                      setCopiedEmbed('link')
-                      setTimeout(() => setCopiedEmbed(null), 2000)
-                    }}
-                    className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg transition-all"
-                    style={copiedEmbed === 'link'
-                      ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }
-                      : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
-                  >
-                    {copiedEmbed === 'link' ? (lang === 'en' ? 'Copied ✓' : 'Copié ✓') : (lang === 'en' ? 'Copy' : 'Copier')}
-                  </button>
-                </div>
-              </div>
-
-              {/* CMS note */}
-              <p className="text-xs" style={{ color: 'rgba(27,43,94,0.35)' }}>
-                💡 {lang === 'en'
-                  ? 'Compatible with WordPress, Wix, Squarespace and all CMS'
-                  : 'Compatible avec WordPress, Wix, Squarespace et tous les CMS'}
-              </p>
-            </div>
-          </div>
-          )}
-          </div>
-        )}
 
         {/* Testimonials list */}
         <div>
