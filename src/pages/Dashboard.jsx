@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -62,6 +62,8 @@ export default function Dashboard() {
   const [autoReminder, setAutoReminder] = useState(true)
   const [copiedEmbed, setCopiedEmbed] = useState(null)
   const [showEmbed, setShowEmbed] = useState(false)
+  const [showExport, setShowExport] = useState(false)
+  const exportRef = useRef(null)
   const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
@@ -196,6 +198,80 @@ export default function Dashboard() {
     navigator.clipboard.writeText(`${window.location.origin}/collect/${user.id}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  // Close export dropdown on outside click
+  useEffect(() => {
+    if (!showExport) return
+    const handle = (e) => {
+      if (exportRef.current && !exportRef.current.contains(e.target)) setShowExport(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [showExport])
+
+  const csvEscape = (val) => {
+    const s = String(val ?? '')
+    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+
+  const exportCSV = () => {
+    const isEn = lang === 'en'
+    const headers = isEn
+      ? ['First name', 'Rating', 'Testimonial', 'Date', 'Status']
+      : ['Prénom', 'Note', 'Témoignage', 'Date', 'Statut']
+    const rows = filtered.map(item => [
+      csvEscape(item.name),
+      csvEscape(item.rating || ''),
+      csvEscape(item.message || ''),
+      csvEscape(new Date(item.created_at).toLocaleDateString(isEn ? 'en-US' : 'fr-FR')),
+      csvEscape(item.approved ? (isEn ? 'Approved' : 'Approuvé') : (isEn ? 'Pending' : 'En attente')),
+    ])
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'dixitapp-temoignages.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+    setShowExport(false)
+  }
+
+  const exportPDF = () => {
+    const isEn = lang === 'en'
+    const companyName = profile?.company || profile?.firstname || 'Dixitapp'
+    const cards = filtered.map(item => {
+      const stars = item.rating ? '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating) : ''
+      const date = new Date(item.created_at).toLocaleDateString(isEn ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+      return `
+        <div style="border:1px solid #E0D8CC;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;page-break-inside:avoid;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+            <strong style="color:#1B2B5E;font-size:0.95rem;">${item.name}</strong>
+            <span style="font-size:0.75rem;color:#888;">${date}</span>
+          </div>
+          ${stars ? `<div style="color:#C8102E;font-size:1rem;margin-bottom:0.4rem;">${stars}</div>` : ''}
+          <p style="color:#444;font-size:0.875rem;line-height:1.6;margin:0;">${item.message || (isEn ? '(Video testimonial)' : '(Témoignage vidéo)')}</p>
+        </div>`
+    }).join('')
+    const title = isEn ? 'Testimonials' : 'Témoignages'
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${companyName} — ${title}</title>
+      <style>
+        body{font-family:Arial,sans-serif;padding:2rem 2.5rem;color:#1B2B5E;max-width:800px;margin:0 auto;}
+        h1{font-size:1.5rem;margin-bottom:0.25rem;}
+        .sub{color:#888;font-size:0.85rem;margin-bottom:1.5rem;}
+        @media print{@page{margin:1.5cm;}}
+      </style></head>
+      <body>
+        <h1>${companyName}</h1>
+        <p class="sub">${title} — ${filtered.length} ${isEn ? 'result(s)' : 'résultat(s)'}</p>
+        ${cards}
+      </body></html>`
+    const win = window.open('', '_blank')
+    win.document.write(html)
+    win.document.close()
+    win.print()
+    setShowExport(false)
   }
 
   const openWall = () => {
@@ -744,10 +820,42 @@ export default function Dashboard() {
             >
               {t.dash.testimonialsTitle}
             </h3>
-            <div
-              className="flex rounded-xl p-1 gap-1"
-              style={{ backgroundColor: '#ffffff', border: '1px solid rgba(27,43,94,0.1)' }}
-            >
+            <div className="flex items-center gap-3">
+              {/* Export dropdown */}
+              <div style={{ position: 'relative' }} ref={exportRef}>
+                <button
+                  onClick={() => setShowExport(s => !s)}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                  style={{ backgroundColor: '#ffffff', border: '1px solid rgba(27,43,94,0.2)', color: '#1B2B5E', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F5F0E8')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
+                >
+                  {lang === 'en' ? 'Export ▼' : 'Exporter ▼'}
+                </button>
+                {showExport && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, backgroundColor: '#ffffff', border: '1px solid #E0D8CC', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '180px', zIndex: 10, overflow: 'hidden' }}>
+                    {[
+                      { key: 'csv', label: lang === 'en' ? 'Export as CSV' : 'Exporter en CSV', action: exportCSV },
+                      { key: 'pdf', label: lang === 'en' ? 'Export as PDF' : 'Exporter en PDF', action: exportPDF },
+                    ].map(({ key, label, action }) => (
+                      <button
+                        key={key}
+                        onClick={action}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#1B2B5E' }}
+                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F5F0E8')}
+                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Tabs */}
+              <div
+                className="flex rounded-xl p-1 gap-1"
+                style={{ backgroundColor: '#ffffff', border: '1px solid rgba(27,43,94,0.1)' }}
+              >
               {TABS.map(({ key, label }) => (
                 <button
                   key={key}
@@ -762,6 +870,7 @@ export default function Dashboard() {
                   {label}
                 </button>
               ))}
+              </div>
             </div>
           </div>
 
