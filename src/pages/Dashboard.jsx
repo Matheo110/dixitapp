@@ -64,6 +64,8 @@ export default function Dashboard() {
   const [showEmbed, setShowEmbed] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const exportRef = useRef(null)
+  const [showNavMenu, setShowNavMenu] = useState(false)
+  const navMenuRef = useRef(null)
   const [copiedInvite, setCopiedInvite] = useState(null)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
@@ -200,6 +202,16 @@ export default function Dashboard() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Close nav hamburger menu on outside click
+  useEffect(() => {
+    if (!showNavMenu) return
+    const navHandler = (e) => {
+      if (navMenuRef.current && !navMenuRef.current.contains(e.target)) setShowNavMenu(false)
+    }
+    document.addEventListener('mousedown', navHandler)
+    return () => document.removeEventListener('mousedown', navHandler)
+  }, [showNavMenu])
+
   // Close export dropdown on outside click
   useEffect(() => {
     if (!showExport) return
@@ -333,17 +345,8 @@ export default function Dashboard() {
   ]
 
   const navRight = (
-    <div className="flex items-center gap-5">
+    <div className="flex items-center gap-4">
       <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{planLabel}</span>
-      <a
-        href="/profile"
-        className="text-sm font-medium transition-colors"
-        style={{ color: 'rgba(255,255,255,0.65)' }}
-        onMouseEnter={e => (e.target.style.color = '#ffffff')}
-        onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
-      >
-        {t.nav.myProfile}
-      </a>
       <a
         href="/pricing"
         className="text-sm font-medium transition-colors"
@@ -353,15 +356,56 @@ export default function Dashboard() {
       >
         {t.nav.seePlans}
       </a>
-      <button
-        onClick={handleLogout}
-        className="text-sm font-medium transition-colors"
-        style={{ color: 'rgba(255,255,255,0.65)' }}
-        onMouseEnter={e => (e.target.style.color = '#ffffff')}
-        onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.65)')}
-      >
-        {t.nav.logout}
-      </button>
+
+      {/* Hamburger menu */}
+      <div style={{ position: 'relative' }} ref={navMenuRef}>
+        <button
+          onClick={() => setShowNavMenu(s => !s)}
+          aria-label="Menu"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <svg width="22" height="16" viewBox="0 0 22 16" fill="#F5F0E8">
+            <rect width="22" height="2" rx="1"/>
+            <rect y="7" width="22" height="2" rx="1"/>
+            <rect y="14" width="22" height="2" rx="1"/>
+          </svg>
+        </button>
+
+        {showNavMenu && (
+          <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: '#ffffff', border: '1px solid #E0D8CC', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '210px', zIndex: 50, overflow: 'hidden' }}>
+
+            <button
+              onClick={() => { setShowNavMenu(false); navigate('/profile') }}
+              style={{ display: 'block', width: '100%', padding: '0.75rem 1.25rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#1B2B5E' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              {lang === 'en' ? 'My profile' : 'Mon profil'}
+            </button>
+
+            <button
+              onClick={() => { setShowNavMenu(false); navigate('/customize') }}
+              style={{ display: 'block', width: '100%', padding: '0.75rem 1.25rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#1B2B5E' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              {lang === 'en' ? 'Customize my wall' : 'Personnaliser mon mur'}
+            </button>
+
+            <div style={{ height: '1px', backgroundColor: '#E0D8CC' }} />
+
+            <button
+              onClick={() => { setShowNavMenu(false); handleLogout() }}
+              style={{ display: 'block', width: '100%', padding: '0.75rem 1.25rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#1B2B5E' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              {lang === 'en' ? 'Logout' : 'Déconnexion'}
+            </button>
+
+          </div>
+        )}
+      </div>
     </div>
   )
 
