@@ -64,6 +64,63 @@ function CountUp({ target, duration = 1500 }) {
   return <span ref={ref}>{count}</span>
 }
 
+function FaqItem({ question, answer }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ borderBottom: '1px solid #E0D8CC' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '1.25rem 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', gap: '1rem' }}
+      >
+        <span style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, color: '#1B2B5E', fontSize: '1rem', lineHeight: 1.4 }}>
+          {question}
+        </span>
+        <svg
+          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B2B5E" strokeWidth="2.5"
+          style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+      <div style={{ maxHeight: open ? '400px' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease' }}>
+        <p style={{ paddingBottom: '1.25rem', color: '#555', fontSize: '0.9rem', lineHeight: 1.75 }}>
+          {answer}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+const FAQ_FR = [
+  { q: "Est-ce vraiment gratuit ?", a: "Oui, l'accès est totalement gratuit pendant la période bêta jusqu'au 1er août 2026. Aucune carte bancaire requise." },
+  { q: "Comment mes clients laissent-ils un témoignage ?", a: "Vous générez un lien unique depuis votre dashboard et vous l'envoyez à votre client. Il clique, remplit le formulaire en 2 minutes et c'est tout. Aucun compte requis." },
+  { q: "Puis-je collecter des témoignages vidéo ?", a: "Oui ! Vos clients peuvent choisir entre un témoignage écrit ou une vidéo directement depuis leur navigateur." },
+  { q: "Comment afficher les témoignages sur mon site ?", a: "Copiez simplement le code iFrame depuis votre dashboard et collez-le sur votre site WordPress, Wix, Squarespace ou tout autre CMS." },
+  { q: "Mes données sont-elles sécurisées ?", a: "Oui. Toutes vos données sont hébergées en Europe (Supabase EU) et ne sont jamais partagées ou vendues à des tiers." },
+  { q: "Puis-je annuler à tout moment ?", a: "Oui, sans engagement. Vous pouvez annuler votre abonnement à tout moment depuis votre dashboard." },
+]
+
+const FAQ_EN = [
+  { q: "Is it really free?", a: "Yes, access is completely free during the beta period until August 1, 2026. No credit card required." },
+  { q: "How do my clients leave a testimonial?", a: "You generate a unique link from your dashboard and send it to your client. They click, fill in the form in 2 minutes and that's it. No account required." },
+  { q: "Can I collect video testimonials?", a: "Yes! Your clients can choose between a written testimonial or a video directly from their browser." },
+  { q: "How do I display testimonials on my website?", a: "Simply copy the iFrame code from your dashboard and paste it on your WordPress, Wix, Squarespace or any other CMS website." },
+  { q: "Is my data secure?", a: "Yes. All your data is hosted in Europe (Supabase EU) and is never shared or sold to third parties." },
+  { q: "Can I cancel at any time?", a: "Yes, without commitment. You can cancel your subscription at any time from your dashboard." },
+]
+
+const DEMO_FR = [
+  { emoji: '📨', title: 'Vous invitez', desc: 'Générez un lien unique et envoyez-le à votre client par email ou message.' },
+  { emoji: '⭐', title: 'Ils témoignent', desc: 'Votre client remplit un formulaire simple en 2 minutes. Écrit ou vidéo, sans compte.' },
+  { emoji: '✅', title: 'Vous publiez', desc: 'Approuvez le témoignage et intégrez-le directement sur votre site web.' },
+]
+
+const DEMO_EN = [
+  { emoji: '📨', title: 'You invite', desc: 'Generate a unique link and send it to your client by email or message.' },
+  { emoji: '⭐', title: 'They testify', desc: 'Your client fills in a simple form in 2 minutes. Written or video, no account needed.' },
+  { emoji: '✅', title: 'You publish', desc: 'Approve the testimonial and embed it directly on your website.' },
+]
+
 export default function Landing() {
   const navigate = useNavigate()
   const { lang, setLanguage, t } = useLanguage()
@@ -152,6 +209,12 @@ export default function Landing() {
         @keyframes fadeSlideUp {
           from { opacity: 0; transform: translateY(30px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        .demo-row { display: flex; align-items: stretch; gap: 1.25rem; }
+        .demo-arrow { display: flex; align-items: center; flex-shrink: 0; font-size: 1.5rem; color: #C8102E; }
+        @media (max-width: 680px) {
+          .demo-row { flex-direction: column; }
+          .demo-arrow { justify-content: center; font-size: 1.25rem; }
         }
       `}</style>
 
@@ -318,6 +381,42 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── DEMO ── */}
+      <section style={{ backgroundColor: '#1B2B5E', padding: '5rem 1.5rem' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <RevealDiv>
+            <h2 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '2rem', color: '#F5F0E8', textAlign: 'center', marginBottom: '0.6rem' }}>
+              {lang === 'en' ? 'See Dixitapp in action' : 'Voyez Dixitapp en action'}
+            </h2>
+            <p style={{ textAlign: 'center', color: 'rgba(245,240,232,0.6)', fontSize: '0.95rem', marginBottom: '0.75rem' }}>
+              {lang === 'en' ? 'From invitation to publication in less than 2 minutes' : "De l'invitation à la publication en moins de 2 minutes"}
+            </p>
+            <div style={{ width: 40, height: 3, backgroundColor: '#C8102E', borderRadius: '9999px', margin: '0 auto 3.5rem' }} />
+          </RevealDiv>
+
+          <div className="demo-row">
+            {(lang === 'en' ? DEMO_EN : DEMO_FR).map((step, i) => (
+              <>
+                <RevealDiv key={step.title} delay={i * 180} style={{ flex: 1 }}>
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '2rem 1.5rem', textAlign: 'center', height: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '1rem', lineHeight: 1 }}>{step.emoji}</div>
+                    <h3 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', color: '#1B2B5E', marginBottom: '0.6rem' }}>
+                      {step.title}
+                    </h3>
+                    <p style={{ fontSize: '0.875rem', color: '#666', lineHeight: 1.65 }}>
+                      {step.desc}
+                    </p>
+                  </div>
+                </RevealDiv>
+                {i < 2 && (
+                  <div className="demo-arrow" key={`arrow-${i}`}>→</div>
+                )}
+              </>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ── */}
       <section style={{ backgroundColor: '#ffffff', padding: '5rem 1.5rem' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -433,6 +532,25 @@ export default function Landing() {
               </RevealDiv>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section style={{ backgroundColor: '#ffffff', padding: '5rem 1.5rem' }}>
+        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+          <RevealDiv>
+            <h2 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '2rem', color: '#1B2B5E', textAlign: 'center', marginBottom: '0.75rem' }}>
+              {lang === 'en' ? 'Frequently asked questions' : 'Questions fréquentes'}
+            </h2>
+            <div style={{ width: 40, height: 3, backgroundColor: '#C8102E', borderRadius: '9999px', margin: '0 auto 3rem' }} />
+          </RevealDiv>
+          <RevealDiv delay={100}>
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #E0D8CC', padding: '0 2rem' }}>
+              {(lang === 'en' ? FAQ_EN : FAQ_FR).map((item, i) => (
+                <FaqItem key={i} question={item.q} answer={item.a} />
+              ))}
+            </div>
+          </RevealDiv>
         </div>
       </section>
 
