@@ -46,6 +46,8 @@ export default function Profile() {
   const [avatarUrl, setAvatarUrl] = useState('')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [uploadError, setUploadError] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const [avatarSuccess, setAvatarSuccess] = useState(false)
 
   const [showEmailForm, setShowEmailForm] = useState(false)
   const [newEmail, setNewEmail] = useState('')
@@ -92,24 +94,43 @@ export default function Profile() {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 2 * 1024 * 1024) {
       setUploadError(t.profile.avatarSizeError)
       return
     }
+    const preview = URL.createObjectURL(file)
+    setPreviewUrl(preview)
+    setAvatarSuccess(false)
     setUploadingAvatar(true)
     setUploadError(null)
-    const path = `${user.id}/avatar`
+
+    const ext = file.name.split('.').pop()
+    const path = `${user.id}-${Date.now()}.${ext}`
     const { error: upErr } = await supabase.storage
       .from('avatars')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, file, { contentType: file.type })
     if (upErr) {
       setUploadError(upErr.message)
+      setPreviewUrl(null)
+      URL.revokeObjectURL(preview)
       setUploadingAvatar(false)
       return
     }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
     setAvatarUrl(publicUrl)
+    setPreviewUrl(null)
+    URL.revokeObjectURL(preview)
+    setAvatarSuccess(true)
     setUploadingAvatar(false)
+    e.target.value = ''
+  }
+
+  const handleRemoveAvatar = async () => {
+    await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
+    setAvatarUrl('')
+    setPreviewUrl(null)
+    setAvatarSuccess(false)
   }
 
   const handleSave = async (e) => {
@@ -218,22 +239,26 @@ export default function Profile() {
               <label className="block text-sm font-medium mb-3" style={{ color: '#1B2B5E' }}>
                 {t.profile.avatarUrl}
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px solid #1B2B5E', overflow: 'hidden', flexShrink: 0, backgroundColor: '#F5F0E8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {avatarUrl ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.7rem' }}>
+
+                {/* Circle */}
+                <div style={{ width: 100, height: 100, borderRadius: '50%', border: '3px solid #1B2B5E', overflow: 'hidden', flexShrink: 0, backgroundColor: '#F5F0E8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {(previewUrl || avatarUrl) ? (
                     <img
-                      src={avatarUrl}
+                      src={previewUrl || avatarUrl}
                       alt={t.profile.avatarPreview}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={e => { e.currentTarget.style.display = 'none' }}
                     />
                   ) : (
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(27,43,94,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                    </svg>
+                    <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1B2B5E', userSelect: 'none', lineHeight: 1 }}>
+                      {((firstname?.[0] || '') + (company?.[0] || '')).toUpperCase() || '?'}
+                    </span>
                   )}
                 </div>
-                <div>
+
+                {/* Action buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
@@ -244,17 +269,44 @@ export default function Profile() {
                   />
                   <label
                     htmlFor="avatar-upload"
-                    style={{ display: 'inline-block', backgroundColor: uploadingAvatar ? 'rgba(27,43,94,0.4)' : '#1B2B5E', color: '#F5F0E8', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 500, cursor: uploadingAvatar ? 'not-allowed' : 'pointer' }}
+                    style={{
+                      display: 'inline-block',
+                      background: 'transparent',
+                      border: '1px solid #1B2B5E',
+                      color: uploadingAvatar ? 'rgba(27,43,94,0.35)' : '#1B2B5E',
+                      padding: '0.4rem 0.85rem',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      cursor: uploadingAvatar ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
                   >
-                    {uploadingAvatar ? t.profile.avatarUploading : t.profile.avatarChoose}
+                    {uploadingAvatar ? t.profile.avatarUploading : t.profile.avatarChange}
                   </label>
-                  <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: 'rgba(27,43,94,0.4)' }}>
-                    JPG, PNG, WebP — max 5 MB
-                  </p>
-                  {uploadError && (
-                    <p style={{ marginTop: '0.3rem', fontSize: '0.75rem', color: '#C8102E' }}>{uploadError}</p>
+
+                  {avatarUrl && !uploadingAvatar && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      style={{ background: 'none', border: 'none', color: '#C8102E', fontSize: '0.8rem', cursor: 'pointer', padding: '0.4rem 0' }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                    >
+                      {t.profile.avatarRemove}
+                    </button>
                   )}
                 </div>
+
+                <p style={{ fontSize: '0.73rem', color: 'rgba(27,43,94,0.4)', marginTop: '-0.1rem' }}>
+                  JPG, PNG, WebP — max 2 MB
+                </p>
+                {uploadError && (
+                  <p style={{ fontSize: '0.75rem', color: '#C8102E', marginTop: '-0.3rem' }}>{uploadError}</p>
+                )}
+                {avatarSuccess && (
+                  <p style={{ fontSize: '0.75rem', color: '#22c55e', marginTop: '-0.3rem' }}>{t.profile.avatarUpdated}</p>
+                )}
               </div>
             </div>
 
