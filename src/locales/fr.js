@@ -104,6 +104,15 @@ export const fr = {
     responseRate: 'Taux de réponse',
     avgRating: 'Note moyenne',
     newTestimonialToast: 'Nouveau témoignage reçu ! 🎉',
+    customLinkTitle: 'Personnaliser mon lien',
+    customLinkLabel: 'Lettres minuscules, chiffres et tirets (3-30 caractères)',
+    customLinkPlaceholder: 'ex: jean-dupont',
+    customLinkUpdate: 'Mettre à jour',
+    customLinkSuccess: 'Lien mis à jour avec succès !',
+    customLinkTaken: 'Cet identifiant est déjà pris.',
+    customLinkAvailable: 'Disponible ✓',
+    customLinkInvalid: 'Lettres minuscules, chiffres et tirets uniquement (3-30 caractères).',
+    customLinkChecking: 'Vérification…',
   },
 
   collect: {

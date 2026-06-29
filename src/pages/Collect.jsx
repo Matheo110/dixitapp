@@ -31,6 +31,7 @@ export default function Collect() {
   const streamRef = useRef(null)
 
   const [invitation, setInvitation] = useState(null)
+  const [openProfile, setOpenProfile] = useState(null)
   const [inviteLoading, setInviteLoading] = useState(true)
   const [invalidLink, setInvalidLink] = useState(false)
   const [ownerProfile, setOwnerProfile] = useState(null)
@@ -47,7 +48,22 @@ export default function Collect() {
       .eq('used', false)
       .single()
       .then(async ({ data, error }) => {
-        if (error || !data) { setInvalidLink(true); setInviteLoading(false); return }
+        if (error || !data) {
+          // Fallback: treat token as a profile slug for open collect form
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, firstname, company, activity, custom_message, avatar_url')
+            .eq('slug', token)
+            .maybeSingle()
+          if (profile) {
+            setOpenProfile(profile)
+            setOwnerProfile(profile)
+          } else {
+            setInvalidLink(true)
+          }
+          setInviteLoading(false)
+          return
+        }
         setInvitation(data)
         const { data: profile } = await supabase
           .from('profiles')
@@ -122,7 +138,7 @@ export default function Collect() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!invitation || !mode) return
+    if ((!invitation && !openProfile) || !mode) return
 
     const name = (mode === 'text' ? form.name : videoName).trim()
     if (!name) { setError(t.collect.errorName); return }
@@ -157,7 +173,7 @@ export default function Collect() {
     }
 
     const payload = {
-      user_id: invitation.user_id,
+      user_id: invitation ? invitation.user_id : openProfile.id,
       name,
       company: null,
       role: null,
@@ -173,7 +189,9 @@ export default function Collect() {
       setError(`${t.collect.errorGeneric} : ${error.message}`)
       setLoading(false)
     } else {
-      await supabase.from('invitations').update({ used: true }).eq('token', token)
+      if (invitation) {
+        await supabase.from('invitations').update({ used: true }).eq('token', token)
+      }
       setSubmitted(true)
     }
   }

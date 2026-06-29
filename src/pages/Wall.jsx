@@ -22,24 +22,35 @@ export default function Wall() {
   const shareRef = useRef(null)
 
   useEffect(() => {
-    Promise.all([
-      supabase
+    const PROFILE_COLS = 'id, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_title, wall_layout, company, firstname, activity, avatar_url'
+    async function load() {
+      // Try by slug field first (custom slug), fall back to UUID id
+      let { data: pData } = await supabase
+        .from('profiles')
+        .select(PROFILE_COLS)
+        .eq('slug', slug)
+        .maybeSingle()
+      if (!pData) {
+        const { data: byId } = await supabase
+          .from('profiles')
+          .select(PROFILE_COLS)
+          .eq('id', slug)
+          .maybeSingle()
+        pData = byId
+      }
+      if (!pData) { setNotFound(true); setLoading(false); return }
+      const { data: tData, error } = await supabase
         .from('testimonials')
         .select('*')
-        .eq('user_id', slug)
+        .eq('user_id', pData.id)
         .eq('approved', true)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('profiles')
-        .select('wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_title, wall_layout, company, firstname, activity, avatar_url')
-        .eq('id', slug)
-        .single(),
-    ]).then(([{ data: tData, error }, { data: pData }]) => {
+        .order('created_at', { ascending: false })
       if (error) { setNotFound(true); setLoading(false); return }
       setTestimonials(tData || [])
       setProfile(pData)
       setLoading(false)
-    })
+    }
+    load()
   }, [slug])
 
   useEffect(() => {

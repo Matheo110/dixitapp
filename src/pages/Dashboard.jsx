@@ -69,6 +69,12 @@ export default function Dashboard() {
   const [copiedInvite, setCopiedInvite] = useState(null)
   const [unseenCount, setUnseenCount] = useState(0)
   const [showToast, setShowToast] = useState(false)
+  const [customSlug, setCustomSlug] = useState('')
+  const [slugAvailable, setSlugAvailable] = useState(null)
+  const [slugChecking, setSlugChecking] = useState(false)
+  const [slugSaving, setSlugSaving] = useState(false)
+  const [slugSuccess, setSlugSuccess] = useState(false)
+  const [slugError, setSlugError] = useState(null)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
 
@@ -83,6 +89,33 @@ export default function Dashboard() {
       setProfile(p)
     })
   }, [user])
+
+  // Initialise customSlug from slug once loaded
+  useEffect(() => {
+    if (slug && !customSlug) setCustomSlug(slug)
+  }, [slug])
+
+  // Debounced availability check
+  useEffect(() => {
+    if (!customSlug || customSlug === slug) {
+      setSlugAvailable(null)
+      setSlugChecking(false)
+      return
+    }
+    if (!/^[a-z0-9-]{3,30}$/.test(customSlug)) {
+      setSlugAvailable(null)
+      setSlugChecking(false)
+      return
+    }
+    setSlugChecking(true)
+    setSlugAvailable(null)
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.from('profiles').select('id').eq('slug', customSlug).maybeSingle()
+      setSlugChecking(false)
+      setSlugAvailable(!data)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [customSlug, slug])
 
   const fetchTestimonials = useCallback(async () => {
     if (!user) return
@@ -226,8 +259,9 @@ export default function Dashboard() {
   }
 
   const copyCollectLink = () => {
-    if (!user) return
-    navigator.clipboard.writeText(`${window.location.origin}/collect/${user.id}`)
+    const id = slug || user?.id
+    if (!id) return
+    navigator.clipboard.writeText(`${window.location.origin}/collect/${id}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -317,8 +351,25 @@ export default function Dashboard() {
   }
 
   const openWall = () => {
-    if (!user) return
-    window.open(`${window.location.origin}/wall/${user.id}`, '_blank')
+    const id = slug || user?.id
+    if (!id) return
+    window.open(`${window.location.origin}/wall/${id}`, '_blank')
+  }
+
+  const handleSlugUpdate = async () => {
+    if (!slugAvailable || !user) return
+    setSlugSaving(true)
+    setSlugError(null)
+    setSlugSuccess(false)
+    const { error } = await supabase.from('profiles').update({ slug: customSlug }).eq('id', user.id)
+    setSlugSaving(false)
+    if (error) {
+      setSlugError(error.message)
+    } else {
+      setSlug(customSlug)
+      setSlugSuccess(true)
+      setTimeout(() => setSlugSuccess(false), 3000)
+    }
   }
 
   const handleLogout = async () => {
@@ -509,6 +560,103 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Custom collect link */}
+        {slug && (
+          <div className="bg-white rounded-2xl mb-8" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+            <div style={{ height: 4, backgroundColor: '#1B2B5E', borderRadius: '12px 12px 0 0' }} />
+            <div className="p-6">
+              <h3 className="font-display font-semibold text-lg mb-1" style={{ color: '#1B2B5E' }}>
+                {t.dash.customLinkTitle}
+              </h3>
+              <p className="text-sm mb-5" style={{ color: 'rgba(27,43,94,0.5)' }}>
+                {lang === 'en'
+                  ? 'Personalize the URLs for your collect form and public wall.'
+                  : 'Personnalisez les liens de votre formulaire de collecte et de votre mur public.'}
+              </p>
+
+              <div className="mb-4 space-y-2">
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ backgroundColor: '#F5F0E8' }}>
+                  <code className="flex-1 truncate text-xs" style={{ color: '#1B2B5E' }}>
+                    dixitapp.tech/collect/<strong>{slug}</strong>
+                  </code>
+                  <button
+                    onClick={copyCollectLink}
+                    className="text-xs px-2.5 py-1 rounded-lg shrink-0 transition-all"
+                    style={copied
+                      ? { backgroundColor: 'rgba(27,43,94,0.12)', color: '#1B2B5E' }
+                      : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
+                  >
+                    {copied ? t.dash.copied : t.dash.copy}
+                  </button>
+                </div>
+                <div className="px-3 py-2.5 rounded-xl" style={{ backgroundColor: '#F5F0E8' }}>
+                  <code className="text-xs block truncate" style={{ color: '#1B2B5E' }}>
+                    dixitapp.tech/wall/<strong>{slug}</strong>
+                  </code>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={customSlug}
+                    onChange={e => {
+                      setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                      setSlugSuccess(false)
+                      setSlugError(null)
+                    }}
+                    placeholder={t.dash.customLinkPlaceholder}
+                    maxLength={30}
+                    className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                    style={{
+                      backgroundColor: '#F5F0E8',
+                      border: `1.5px solid ${slugAvailable === true ? '#22c55e' : slugAvailable === false ? '#C8102E' : 'rgba(27,43,94,0.2)'}`,
+                      color: '#1B2B5E',
+                    }}
+                  />
+                  <p className="text-xs mt-1.5" style={{
+                    color: slugChecking
+                      ? 'rgba(27,43,94,0.4)'
+                      : slugAvailable === true ? '#22c55e'
+                      : slugAvailable === false ? '#C8102E'
+                      : 'rgba(27,43,94,0.4)',
+                  }}>
+                    {slugChecking
+                      ? t.dash.customLinkChecking
+                      : slugAvailable === true ? t.dash.customLinkAvailable
+                      : slugAvailable === false ? t.dash.customLinkTaken
+                      : customSlug && customSlug !== slug && !/^[a-z0-9-]{3,30}$/.test(customSlug)
+                        ? t.dash.customLinkInvalid
+                        : t.dash.customLinkLabel}
+                  </p>
+                </div>
+                <button
+                  onClick={handleSlugUpdate}
+                  disabled={!slugAvailable || slugSaving || slugChecking}
+                  className="px-5 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all disabled:opacity-40 disabled:cursor-not-allowed self-start"
+                  style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
+                  onMouseEnter={e => slugAvailable && !slugSaving && (e.currentTarget.style.backgroundColor = '#253d82')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#1B2B5E')}
+                >
+                  {slugSaving
+                    ? (lang === 'en' ? 'Saving…' : 'Enregistrement…')
+                    : t.dash.customLinkUpdate}
+                </button>
+              </div>
+
+              {slugSuccess && (
+                <p className="text-sm mt-3 font-medium" style={{ color: '#22c55e' }}>
+                  {t.dash.customLinkSuccess}
+                </p>
+              )}
+              {slugError && (
+                <p className="text-sm mt-3" style={{ color: '#C8102E' }}>{slugError}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Toggle buttons row */}
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <button
@@ -682,11 +830,11 @@ export default function Dashboard() {
                 <div className="flex items-start gap-2">
                   <div className="flex-1 rounded-lg overflow-x-auto" style={{ backgroundColor: '#1B2B5E', padding: '1rem', borderRadius: '8px' }}>
                     <code style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#F5F0E8', whiteSpace: 'pre', display: 'block' }}>
-                      {`<iframe src="https://dixitapp.tech/wall/${user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`}
+                      {`<iframe src="https://dixitapp.tech/wall/${slug || user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`}
                     </code>
                   </div>
                   <button
-                    onClick={() => { navigator.clipboard.writeText(`<iframe src="https://dixitapp.tech/wall/${user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`); setCopiedEmbed('iframe'); setTimeout(() => setCopiedEmbed(null), 2000) }}
+                    onClick={() => { navigator.clipboard.writeText(`<iframe src="https://dixitapp.tech/wall/${slug || user.id}" width="100%" height="600px" frameborder="0" style="border:none;border-radius:12px;"></iframe>`); setCopiedEmbed('iframe'); setTimeout(() => setCopiedEmbed(null), 2000) }}
                     className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg transition-all"
                     style={copiedEmbed === 'iframe' ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' } : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
                   >
@@ -703,11 +851,11 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 rounded-lg overflow-x-auto" style={{ backgroundColor: '#1B2B5E', padding: '1rem', borderRadius: '8px' }}>
                     <code style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#F5F0E8', whiteSpace: 'nowrap', display: 'block' }}>
-                      {`https://dixitapp.tech/wall/${user.id}`}
+                      {`https://dixitapp.tech/wall/${slug || user.id}`}
                     </code>
                   </div>
                   <button
-                    onClick={() => { navigator.clipboard.writeText(`https://dixitapp.tech/wall/${user.id}`); setCopiedEmbed('link'); setTimeout(() => setCopiedEmbed(null), 2000) }}
+                    onClick={() => { navigator.clipboard.writeText(`https://dixitapp.tech/wall/${slug || user.id}`); setCopiedEmbed('link'); setTimeout(() => setCopiedEmbed(null), 2000) }}
                     className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg transition-all"
                     style={copiedEmbed === 'link' ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' } : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
                   >
@@ -804,7 +952,7 @@ export default function Dashboard() {
                 {inviteLoading ? t.dash.generating : clientEmail ? t.dash.generateAndSend : t.dash.generateLink}
               </button>
               <button
-                onClick={() => user && window.open(`${window.location.origin}/wall/${user.id}`, '_blank')}
+                onClick={openWall}
                 className="px-5 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all"
                 style={{ backgroundColor: '#ffffff', border: '1.5px solid #1B2B5E', color: '#1B2B5E' }}
                 onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1B2B5E'; e.currentTarget.style.color = '#F5F0E8' }}

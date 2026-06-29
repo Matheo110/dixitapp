@@ -104,6 +104,15 @@ export const en = {
     responseRate: 'Response rate',
     avgRating: 'Average rating',
     newTestimonialToast: 'New testimonial received! 🎉',
+    customLinkTitle: 'Customize my link',
+    customLinkLabel: 'Lowercase letters, numbers and hyphens (3–30 characters)',
+    customLinkPlaceholder: 'e.g. jane-smith',
+    customLinkUpdate: 'Update',
+    customLinkSuccess: 'Link updated successfully!',
+    customLinkTaken: 'This identifier is already taken.',
+    customLinkAvailable: 'Available ✓',
+    customLinkInvalid: 'Lowercase letters, numbers and hyphens only (3–30 characters).',
+    customLinkChecking: 'Checking…',
   },
 
   collect: {
