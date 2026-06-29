@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { generateSlug } from '../lib/slug'
+import { isPro, isAgency, hasLimits } from '../lib/plan'
 import Navbar from '../components/Navbar'
 import { useLanguage } from '../context/LanguageContext'
 
@@ -32,22 +33,6 @@ async function getOrCreateProfile(user) {
   }
 
   return data || null
-}
-
-function hasLimits(profile) {
-  if (profile?.is_beta) {
-    const betaExpiry = new Date(profile.beta_expires_at || '2026-08-01')
-    if (new Date() < betaExpiry) return false
-  }
-  return profile?.plan === 'free' || !profile?.plan
-}
-function isPro(profile) {
-  if (profile?.is_beta && new Date() < new Date(profile.beta_expires_at || '2026-08-01')) return true
-  return profile?.plan === 'pro' || profile?.plan === 'agency'
-}
-function isAgency(profile) {
-  if (profile?.is_beta && new Date() < new Date(profile.beta_expires_at || '2026-08-01')) return true
-  return profile?.plan === 'agency'
 }
 
 export default function Dashboard() {
