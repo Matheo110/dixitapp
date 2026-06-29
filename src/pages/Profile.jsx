@@ -60,6 +60,11 @@ export default function Profile() {
   const [pwSuccess, setPwSuccess] = useState(false)
   const [pwError, setPwError] = useState(null)
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -154,6 +159,19 @@ export default function Profile() {
     if (error) setPwError(error.message)
     else { setPwSuccess(true); setNewPassword(''); setConfirmPassword('') }
     setPwLoading(false)
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    setDeleteError(null)
+    const { error } = await supabase.functions.invoke('delete-account')
+    if (error) {
+      setDeleteError(error.message)
+      setDeleting(false)
+      return
+    }
+    await supabase.auth.signOut()
+    navigate('/', { replace: true })
   }
 
   const navRight = (
@@ -486,7 +504,92 @@ export default function Profile() {
 
           </div>
         </div>
+        {/* ── DANGER ZONE ── */}
+        <div className="mt-6" style={{ border: '1px solid rgba(200,16,46,0.3)', borderRadius: '12px', padding: '1.5rem' }}>
+          <h2 className="font-display font-semibold text-base mb-1" style={{ color: '#C8102E' }}>
+            {t.profile.dangerZone}
+          </h2>
+          <p className="text-sm mb-4" style={{ color: '#666', lineHeight: 1.6 }}>
+            {t.profile.deleteWarning}
+          </p>
+          <button
+            type="button"
+            onClick={() => { setShowDeleteModal(true); setDeleteConfirm(''); setDeleteError(null) }}
+            style={{ backgroundColor: '#C8102E', color: '#ffffff', padding: '0.6rem 1.25rem', borderRadius: '8px', border: 'none', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+          >
+            {t.profile.deleteAccount}
+          </button>
+        </div>
       </main>
+
+      {/* ── DELETE CONFIRMATION MODAL ── */}
+      {showDeleteModal && (
+        <div
+          onClick={() => !deleting && setShowDeleteModal(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '2rem', maxWidth: '420px', width: '100%', borderTop: '4px solid #C8102E' }}
+          >
+            <h2 className="font-display font-bold text-xl mb-2" style={{ color: '#1B2B5E' }}>
+              {t.profile.deleteAccount}
+            </h2>
+            <p className="text-sm mb-4" style={{ color: '#666', lineHeight: 1.6 }}>
+              {t.profile.deleteWarning}
+            </p>
+            <p className="text-sm font-medium mb-2" style={{ color: '#1B2B5E' }}>
+              {t.profile.deleteConfirmPrompt}
+            </p>
+            <input
+              type="text"
+              value={deleteConfirm}
+              onChange={e => setDeleteConfirm(e.target.value)}
+              placeholder={t.profile.deleteConfirmPlaceholder}
+              style={{ ...inputStyle, marginBottom: '1rem', borderColor: deleteConfirm === t.profile.deleteConfirmWord ? '#C8102E' : 'rgba(27,43,94,0.2)' }}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              disabled={deleting}
+              autoComplete="off"
+            />
+            {deleteError && (
+              <p className="text-sm mb-3" style={{ color: '#C8102E' }}>{deleteError}</p>
+            )}
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirm !== t.profile.deleteConfirmWord || deleting}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#C8102E',
+                  color: '#ffffff',
+                  padding: '0.65rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: deleteConfirm !== t.profile.deleteConfirmWord || deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleteConfirm !== t.profile.deleteConfirmWord || deleting ? 0.4 : 1,
+                  transition: 'opacity 0.15s',
+                }}
+              >
+                {deleting ? t.profile.deleteDeleting : t.profile.deleteAccount}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                style={{ flex: 1, border: '1px solid rgba(27,43,94,0.2)', color: 'rgba(27,43,94,0.7)', background: 'transparent', padding: '0.65rem', borderRadius: '8px', fontSize: '0.875rem', cursor: deleting ? 'not-allowed' : 'pointer' }}
+              >
+                {t.profile.cancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer style={{ backgroundColor: '#111827', padding: '1.25rem 2.5rem', textAlign: 'center' }}>
         <span style={{ color: '#666', fontSize: '0.8rem' }}>© 2025 dixitapp.tech — Fait en France 🇫🇷</span>

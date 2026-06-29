@@ -198,6 +198,13 @@ export const en = {
     passwordMismatch: "Passwords don't match.",
     passwordWeak: 'Password must contain at least 8 characters, 1 number, 1 uppercase and 1 special character.',
     cancel: 'Cancel',
+    dangerZone: 'Danger zone',
+    deleteAccount: 'Delete my account',
+    deleteWarning: 'This action is irreversible. All your data, testimonials and invitations will be permanently deleted.',
+    deleteConfirmPrompt: 'Type DELETE to confirm',
+    deleteConfirmWord: 'DELETE',
+    deleteConfirmPlaceholder: 'Type DELETE',
+    deleteDeleting: 'Deleting…',
   },
 
   pricing: {

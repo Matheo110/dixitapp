@@ -198,6 +198,13 @@ export const fr = {
     passwordMismatch: 'Les mots de passe ne correspondent pas.',
     passwordWeak: 'Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 caractère spécial.',
     cancel: 'Annuler',
+    dangerZone: 'Zone dangereuse',
+    deleteAccount: 'Supprimer mon compte',
+    deleteWarning: 'Cette action est irréversible. Toutes vos données, témoignages et invitations seront définitivement supprimés.',
+    deleteConfirmPrompt: 'Tapez SUPPRIMER pour confirmer',
+    deleteConfirmWord: 'SUPPRIMER',
+    deleteConfirmPlaceholder: 'Tapez SUPPRIMER',
+    deleteDeleting: 'Suppression…',
   },
 
   pricing: {
