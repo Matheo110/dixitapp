@@ -66,6 +66,12 @@ export default function Collect() {
           if (profile) {
             setOpenProfile(profile)
             setOwnerProfile(profile)
+            console.log('Profile debug (slug path):', {
+              is_beta: profile?.is_beta,
+              beta_expires_at: profile?.beta_expires_at,
+              plan: profile?.plan,
+              isPro: isPro(profile)
+            })
             if (!isPro(profile)) setMode('text')
           } else {
             setInvalidLink(true)
@@ -80,6 +86,12 @@ export default function Collect() {
           .eq('id', data.user_id)
           .single()
         setOwnerProfile(profile)
+        console.log('Profile debug (invitation path):', {
+          is_beta: profile?.is_beta,
+          beta_expires_at: profile?.beta_expires_at,
+          plan: profile?.plan,
+          isPro: isPro(profile)
+        })
         if (!isPro(profile)) setMode('text')
         setInviteLoading(false)
       })
