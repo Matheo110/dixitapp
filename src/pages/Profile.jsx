@@ -47,6 +47,19 @@ export default function Profile() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [uploadError, setUploadError] = useState(null)
 
+  const [showEmailForm, setShowEmailForm] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [emailSuccess, setEmailSuccess] = useState(false)
+  const [emailError, setEmailError] = useState(null)
+
+  const [showPwForm, setShowPwForm] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [pwLoading, setPwLoading] = useState(false)
+  const [pwSuccess, setPwSuccess] = useState(false)
+  const [pwError, setPwError] = useState(null)
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -115,6 +128,32 @@ export default function Profile() {
     if (error) setError(error.message)
     else setSaved(true)
     setSaving(false)
+  }
+
+  const handleEmailUpdate = async () => {
+    if (!newEmail.trim()) return
+    setEmailLoading(true)
+    setEmailError(null)
+    setEmailSuccess(false)
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() })
+    if (error) setEmailError(error.message)
+    else { setEmailSuccess(true); setNewEmail('') }
+    setEmailLoading(false)
+  }
+
+  const isStrongPassword = (pw) =>
+    pw.length >= 8 && /[0-9]/.test(pw) && /[A-Z]/.test(pw) && /[^a-zA-Z0-9]/.test(pw)
+
+  const handlePasswordUpdate = async () => {
+    setPwError(null)
+    setPwSuccess(false)
+    if (newPassword !== confirmPassword) { setPwError(t.profile.passwordMismatch); return }
+    if (!isStrongPassword(newPassword)) { setPwError(t.profile.passwordWeak); return }
+    setPwLoading(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) setPwError(error.message)
+    else { setPwSuccess(true); setNewPassword(''); setConfirmPassword('') }
+    setPwLoading(false)
   }
 
   const navRight = (
@@ -311,6 +350,141 @@ export default function Profile() {
             </button>
 
           </form>
+        </div>
+
+        {/* ── SECURITY ── */}
+        <div className="bg-white rounded-2xl overflow-hidden mt-6" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+          <div style={{ height: 4, backgroundColor: '#1B2B5E' }} />
+          <div className="p-6 sm:p-8">
+            <h2 className="font-display font-semibold text-lg mb-6" style={{ color: '#1B2B5E' }}>
+              {t.profile.security}
+            </h2>
+
+            {/* Email */}
+            <div style={{ borderBottom: '1px solid rgba(27,43,94,0.08)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: showEmailForm ? '1rem' : 0 }}>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: '#1B2B5E', marginBottom: '0.2rem' }}>{t.profile.currentEmail}</p>
+                  <p className="text-sm" style={{ color: 'rgba(27,43,94,0.45)', wordBreak: 'break-all' }}>{user?.email}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setShowEmailForm(s => !s); setEmailError(null); setEmailSuccess(false) }}
+                  style={{ border: '1px solid #1B2B5E', color: '#1B2B5E', background: 'transparent', padding: '0.4rem 0.9rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1B2B5E'; e.currentTarget.style.color = '#F5F0E8' }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#1B2B5E' }}
+                >
+                  {t.profile.changeEmail}
+                </button>
+              </div>
+              {showEmailForm && (
+                <div>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={e => setNewEmail(e.target.value)}
+                    placeholder={t.profile.newEmailPlaceholder}
+                    style={{ ...inputStyle, marginBottom: '0.75rem' }}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                  />
+                  {emailError && <p style={{ color: '#C8102E', fontSize: '0.8rem', marginBottom: '0.6rem' }}>{emailError}</p>}
+                  {emailSuccess && <p style={{ color: '#16a34a', fontSize: '0.8rem', marginBottom: '0.6rem' }}>{t.profile.emailSent}</p>}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={handleEmailUpdate}
+                      disabled={emailLoading}
+                      style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', fontSize: '0.875rem', fontWeight: 500, cursor: emailLoading ? 'not-allowed' : 'pointer', opacity: emailLoading ? 0.6 : 1 }}
+                    >
+                      {emailLoading ? '…' : t.profile.updateEmail}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowEmailForm(false); setNewEmail(''); setEmailError(null); setEmailSuccess(false) }}
+                      style={{ border: '1px solid rgba(27,43,94,0.2)', color: 'rgba(27,43,94,0.6)', background: 'transparent', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.875rem', cursor: 'pointer' }}
+                    >
+                      {t.profile.cancel}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: showPwForm ? '1rem' : 0 }}>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: '#1B2B5E', marginBottom: '0.2rem' }}>{t.profile.changePassword}</p>
+                  <p className="text-sm" style={{ color: 'rgba(27,43,94,0.35)', letterSpacing: '0.1em' }}>••••••••</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setShowPwForm(s => !s); setPwError(null); setPwSuccess(false) }}
+                  style={{ border: '1px solid #1B2B5E', color: '#1B2B5E', background: 'transparent', padding: '0.4rem 0.9rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1B2B5E'; e.currentTarget.style.color = '#F5F0E8' }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#1B2B5E' }}
+                >
+                  {t.profile.changePassword}
+                </button>
+              </div>
+              {showPwForm && (
+                <div>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder={t.profile.newPasswordPlaceholder}
+                    style={{ ...inputStyle, marginBottom: '0.75rem' }}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                  />
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder={t.profile.confirmPasswordPlaceholder}
+                    style={{ ...inputStyle, marginBottom: '0.875rem' }}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                  />
+                  <div style={{ marginBottom: '0.875rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem 1.25rem' }}>
+                    {[
+                      { test: newPassword.length >= 8,          label: lang === 'en' ? '8+ characters' : '8+ caractères' },
+                      { test: /[0-9]/.test(newPassword),         label: lang === 'en' ? '1 number' : '1 chiffre' },
+                      { test: /[A-Z]/.test(newPassword),         label: lang === 'en' ? '1 uppercase' : '1 majuscule' },
+                      { test: /[^a-zA-Z0-9]/.test(newPassword),  label: lang === 'en' ? '1 special char' : '1 caractère spécial' },
+                    ].map(({ test, label }) => (
+                      <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: test ? '#16a34a' : 'rgba(27,43,94,0.4)' }}>
+                        <span style={{ fontSize: '0.6rem' }}>{test ? '✓' : '○'}</span>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                  {pwError && <p style={{ color: '#C8102E', fontSize: '0.8rem', marginBottom: '0.6rem' }}>{pwError}</p>}
+                  {pwSuccess && <p style={{ color: '#16a34a', fontSize: '0.8rem', marginBottom: '0.6rem' }}>{t.profile.passwordUpdated}</p>}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={handlePasswordUpdate}
+                      disabled={pwLoading}
+                      style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', fontSize: '0.875rem', fontWeight: 500, cursor: pwLoading ? 'not-allowed' : 'pointer', opacity: pwLoading ? 0.6 : 1 }}
+                    >
+                      {pwLoading ? '…' : t.profile.updatePassword}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowPwForm(false); setNewPassword(''); setConfirmPassword(''); setPwError(null); setPwSuccess(false) }}
+                      style={{ border: '1px solid rgba(27,43,94,0.2)', color: 'rgba(27,43,94,0.6)', background: 'transparent', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.875rem', cursor: 'pointer' }}
+                    >
+                      {t.profile.cancel}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
       </main>
 
