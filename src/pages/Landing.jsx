@@ -200,6 +200,7 @@ export default function Landing() {
       cta: t.landing.planCtaAgency,
       featured: false,
       href: '/pricing',
+      comingSoon: true,
     },
   ]
 
@@ -481,6 +482,11 @@ export default function Landing() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                         {f}
+                        {plan.comingSoon && (
+                          <em style={{ fontSize: '0.7rem', color: '#888', fontStyle: 'italic', marginLeft: '0.2rem', flexShrink: 0 }}>
+                            {lang === 'en' ? '(soon)' : '(bientôt)'}
+                          </em>
+                        )}
                       </li>
                     ))}
                   </ul>

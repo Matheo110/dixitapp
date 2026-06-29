@@ -168,19 +168,34 @@ export default function Pricing() {
                   ))}
                 </ul>
 
-                <button
-                  onClick={() => handleCheckout(plan)}
-                  disabled={loading === plan.key}
-                  className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={plan.featured
-                    ? { backgroundColor: '#C8102E', color: '#ffffff' }
-                    : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }
-                  }
-                  onMouseEnter={e => { if (loading !== plan.key) e.currentTarget.style.opacity = '0.85' }}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                >
-                  {loading === plan.key ? t.pricing.loading : plan.cta}
-                </button>
+                {plan.comingSoon ? (
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      disabled
+                      className="w-full py-3 rounded-xl font-semibold text-sm"
+                      style={{ backgroundColor: '#888', color: '#F5F0E8', cursor: 'not-allowed', opacity: 0.6, border: 'none' }}
+                    >
+                      {plan.cta}
+                    </button>
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.78rem', color: '#888', fontStyle: 'italic' }}>
+                      {lang === 'en' ? 'Coming soon' : 'Bientôt disponible'}
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleCheckout(plan)}
+                    disabled={loading === plan.key}
+                    className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={plan.featured
+                      ? { backgroundColor: '#C8102E', color: '#ffffff' }
+                      : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }
+                    }
+                    onMouseEnter={e => { if (loading !== plan.key) e.currentTarget.style.opacity = '0.85' }}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                  >
+                    {loading === plan.key ? t.pricing.loading : plan.cta}
+                  </button>
+                )}
               </div>
             ))}
           </div>
