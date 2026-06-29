@@ -148,6 +148,7 @@ export const en = {
     errorCamera: 'Unable to access camera. Please check your browser permissions.',
     errorUpload: 'Error uploading video',
     errorGeneric: 'Error',
+    videoLocked: 'Pro plan required',
   },
 
   wall: {

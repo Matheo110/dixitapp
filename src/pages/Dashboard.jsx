@@ -41,6 +41,14 @@ function hasLimits(profile) {
   }
   return profile?.plan === 'free' || !profile?.plan
 }
+function isPro(profile) {
+  if (profile?.is_beta && new Date() < new Date(profile.beta_expires_at || '2026-08-01')) return true
+  return profile?.plan === 'pro' || profile?.plan === 'agency'
+}
+function isAgency(profile) {
+  if (profile?.is_beta && new Date() < new Date(profile.beta_expires_at || '2026-08-01')) return true
+  return profile?.plan === 'agency'
+}
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -599,7 +607,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {showStats && (
+        {showStats && isPro(profile) && (
           <div style={{ animation: 'statsReveal 0.3s ease both' }}>
 
           {/* Response rate + avg rating cards */}
@@ -708,7 +716,24 @@ export default function Dashboard() {
           </div>
           )}
 
-        {user && showEmbed && (
+        {showStats && !isPro(profile) && (
+          <div style={{ animation: 'statsReveal 0.3s ease both', marginBottom: '1.5rem' }}>
+            <div className="bg-white rounded-2xl p-8 text-center" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
+              <div style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>🔒</div>
+              <p className="font-semibold mb-1" style={{ color: '#1B2B5E' }}>
+                {lang === 'en' ? 'Advanced statistics' : 'Statistiques avancées'}
+              </p>
+              <p className="text-sm mb-5" style={{ color: 'rgba(27,43,94,0.5)' }}>
+                {lang === 'en' ? 'Pro plan required' : 'Plan Pro requis'}
+              </p>
+              <a href="/pricing" style={{ display: 'inline-block', backgroundColor: '#C8102E', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
+                {lang === 'en' ? 'Upgrade to Pro →' : 'Passer au Pro →'}
+              </a>
+            </div>
+          </div>
+        )}
+
+        {user && showEmbed && isPro(profile) && (
           <div className="bg-white rounded-2xl mb-8" style={{ border: '1px solid rgba(27,43,94,0.1)', animation: 'statsReveal 0.3s ease both' }}>
             <div className="p-6">
               <h3 className="font-display font-semibold text-lg mb-1" style={{ color: '#1B2B5E' }}>
@@ -768,6 +793,30 @@ export default function Dashboard() {
                   ? 'Compatible with WordPress, Wix, Squarespace and all CMS'
                   : 'Compatible avec WordPress, Wix, Squarespace et tous les CMS'}
               </p>
+            </div>
+          </div>
+        )}
+
+        {user && showEmbed && !isPro(profile) && (
+          <div className="bg-white rounded-2xl mb-8" style={{ border: '1px solid rgba(27,43,94,0.1)', animation: 'statsReveal 0.3s ease both' }}>
+            <div className="p-6">
+              <h3 className="font-display font-semibold text-lg mb-4" style={{ color: '#1B2B5E' }}>
+                {lang === 'en' ? 'Embed on my website' : 'Intégrer sur mon site'}
+              </h3>
+              <div style={{ padding: '1rem 0', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>🔒</div>
+                <p style={{ fontWeight: 600, color: '#1B2B5E', marginBottom: '0.25rem' }}>
+                  {lang === 'en' ? 'Available with Pro plan' : 'Disponible avec le plan Pro'}
+                </p>
+                <p style={{ fontSize: '0.875rem', color: 'rgba(27,43,94,0.5)', marginBottom: '1.25rem' }}>
+                  {lang === 'en'
+                    ? 'Embed your testimonials wall directly on your website.'
+                    : 'Intégrez votre mur de témoignages directement sur votre site.'}
+                </p>
+                <a href="/pricing" style={{ display: 'inline-block', backgroundColor: '#C8102E', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
+                  {lang === 'en' ? 'Upgrade to Pro →' : 'Passer au Pro →'}
+                </a>
+              </div>
             </div>
           </div>
         )}

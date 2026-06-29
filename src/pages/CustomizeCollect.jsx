@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { useLanguage } from '../context/LanguageContext'
+import { isPro } from '../lib/plan'
 
 const FONT_FAMILY = {
   'Playfair Display': "'Playfair Display', Georgia, serif",
@@ -39,6 +40,7 @@ export default function CustomizeCollect() {
   const [collectPrimaryColor, setCollectPrimaryColor] = useState('#1B2B5E')
   const [collectAccentColor, setCollectAccentColor] = useState('#C8102E')
   const [collectFont, setCollectFont] = useState('Playfair Display')
+  const [isProUser, setIsProUser] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -46,7 +48,7 @@ export default function CustomizeCollect() {
       setUser(user)
       supabase
         .from('profiles')
-        .select('collect_title, collect_subtitle, collect_bg_color, collect_primary_color, collect_accent_color, collect_font')
+        .select('collect_title, collect_subtitle, collect_bg_color, collect_primary_color, collect_accent_color, collect_font, plan, is_beta, beta_expires_at')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -56,6 +58,7 @@ export default function CustomizeCollect() {
           setCollectPrimaryColor(data?.collect_primary_color || '#1B2B5E')
           setCollectAccentColor(data?.collect_accent_color || '#C8102E')
           setCollectFont(data?.collect_font || 'Playfair Display')
+          setIsProUser(isPro({ plan: data?.plan, is_beta: data?.is_beta, beta_expires_at: data?.beta_expires_at }))
           setLoading(false)
         })
     })
@@ -122,6 +125,26 @@ export default function CustomizeCollect() {
           {t.profile.collectSection}
         </h1>
 
+        {!isProUser && (
+          <div style={{ backgroundColor: 'rgba(255,243,205,0.7)', border: '1.5px solid rgba(200,16,46,0.25)', borderRadius: '12px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>🔒</span>
+            <div>
+              <p style={{ fontWeight: 600, color: '#1B2B5E', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+                {lang === 'en' ? 'This feature requires a Pro plan' : 'Cette fonctionnalité est réservée au plan Pro'}
+              </p>
+              <p style={{ color: 'rgba(27,43,94,0.55)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                {lang === 'en'
+                  ? 'Personalize your collect page title, colors and font with the Pro plan.'
+                  : 'Personnalisez le titre, les couleurs et la police de votre page de collecte avec le plan Pro.'}
+              </p>
+              <a href="/pricing" style={{ display: 'inline-block', backgroundColor: '#C8102E', color: '#fff', padding: '0.4rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none' }}>
+                {lang === 'en' ? 'Upgrade to Pro →' : 'Passer au Pro →'}
+              </a>
+            </div>
+          </div>
+        )}
+
+        <div style={{ filter: isProUser ? 'none' : 'blur(3px)', pointerEvents: isProUser ? 'auto' : 'none', userSelect: isProUser ? 'auto' : 'none' }}>
         <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
           <div style={{ height: 4, backgroundColor: '#C8102E' }} />
 
@@ -282,6 +305,7 @@ export default function CustomizeCollect() {
             </div>
 
           </form>
+        </div>
         </div>
       </main>
 

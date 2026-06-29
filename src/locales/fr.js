@@ -148,6 +148,7 @@ export const fr = {
     errorCamera: "Impossible d'accéder à la caméra. Vérifiez les permissions de votre navigateur.",
     errorUpload: "Erreur lors de l'envoi de la vidéo",
     errorGeneric: 'Erreur',
+    videoLocked: 'Plan Pro requis',
   },
 
   wall: {

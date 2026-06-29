@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { useLanguage } from '../context/LanguageContext'
+import { isPro } from '../lib/plan'
 
 const EMPTY = { name: '', message: '', rating: 0 }
 
@@ -59,7 +60,7 @@ export default function Collect() {
           // Fallback: treat token as a profile slug for open collect form
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, firstname, company, activity, custom_message, avatar_url, collect_bg_color, collect_primary_color, collect_accent_color, collect_font, collect_title, collect_subtitle')
+            .select('id, firstname, company, activity, custom_message, avatar_url, collect_bg_color, collect_primary_color, collect_accent_color, collect_font, collect_title, collect_subtitle, plan, is_beta, beta_expires_at')
             .eq('slug', token)
             .maybeSingle()
           if (profile) {
@@ -74,7 +75,7 @@ export default function Collect() {
         setInvitation(data)
         const { data: profile } = await supabase
           .from('profiles')
-          .select('firstname, company, activity, custom_message, avatar_url, collect_bg_color, collect_primary_color, collect_accent_color, collect_font, collect_title, collect_subtitle')
+          .select('firstname, company, activity, custom_message, avatar_url, collect_bg_color, collect_primary_color, collect_accent_color, collect_font, collect_title, collect_subtitle, plan, is_beta, beta_expires_at')
           .eq('id', data.user_id)
           .single()
         setOwnerProfile(profile)
@@ -320,25 +321,45 @@ export default function Collect() {
                   {t.collect.modeQuestion}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { key: 'text', icon: '✍️', label: t.collect.textMode },
-                    { key: 'video', icon: '🎥', label: t.collect.videoMode },
-                  ].map(({ key, icon, label }) => (
+                  <button
+                    type="button"
+                    onClick={() => switchMode('text')}
+                    className="flex flex-col items-center gap-2 py-5 rounded-xl font-medium text-sm transition-all"
+                    style={
+                      mode === 'text'
+                        ? { backgroundColor: collectPrimary, color: '#F5F0E8', border: `2px solid ${collectPrimary}` }
+                        : { backgroundColor: 'transparent', color: collectPrimary, border: `2px solid ${collectPrimary}` }
+                    }
+                  >
+                    <span className="text-2xl">✍️</span>
+                    {t.collect.textMode}
+                  </button>
+                  {isPro(ownerProfile) ? (
                     <button
-                      key={key}
                       type="button"
-                      onClick={() => switchMode(key)}
+                      onClick={() => switchMode('video')}
                       className="flex flex-col items-center gap-2 py-5 rounded-xl font-medium text-sm transition-all"
                       style={
-                        mode === key
+                        mode === 'video'
                           ? { backgroundColor: collectPrimary, color: '#F5F0E8', border: `2px solid ${collectPrimary}` }
                           : { backgroundColor: 'transparent', color: collectPrimary, border: `2px solid ${collectPrimary}` }
                       }
                     >
-                      <span className="text-2xl">{icon}</span>
-                      {label}
+                      <span className="text-2xl">🎥</span>
+                      {t.collect.videoMode}
                     </button>
-                  ))}
+                  ) : (
+                    <div
+                      className="flex flex-col items-center gap-1.5 py-5 rounded-xl font-medium text-sm"
+                      style={{ color: 'rgba(27,43,94,0.3)', border: '2px dashed rgba(27,43,94,0.15)', cursor: 'not-allowed' }}
+                    >
+                      <span className="text-2xl" style={{ opacity: 0.4 }}>🎥</span>
+                      <span>{t.collect.videoMode}</span>
+                      <span style={{ fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '-0.25rem' }}>
+                        🔒 {t.collect.videoLocked}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

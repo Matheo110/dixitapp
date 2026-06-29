@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { useLanguage } from '../context/LanguageContext'
+import { isPro } from '../lib/plan'
 
 const FONT_FAMILY = {
   'Playfair Display': "'Playfair Display', Georgia, serif",
@@ -25,12 +26,13 @@ const onFocus = e => (e.target.style.borderColor = 'rgba(27,43,94,0.5)')
 const onBlur  = e => (e.target.style.borderColor = 'rgba(27,43,94,0.2)')
 
 export default function Customize() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState(null)
+  const [isProUser, setIsProUser] = useState(false)
 
   const [wallTitle, setWallTitle] = useState('')
   const [wallBgColor, setWallBgColor] = useState('#F5F0E8')
@@ -48,7 +50,7 @@ export default function Customize() {
 
       supabase
         .from('profiles')
-        .select('wall_title, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_layout')
+        .select('wall_title, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_layout, plan, is_beta, beta_expires_at')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -58,6 +60,7 @@ export default function Customize() {
           setWallAccentColor(data?.wall_accent_color || '#C8102E')
           setWallFont(data?.wall_font || 'Playfair Display')
           setWallLayout(data?.wall_layout || 'grid')
+          setIsProUser(isPro({ plan: data?.plan, is_beta: data?.is_beta, beta_expires_at: data?.beta_expires_at }))
           setLoading(false)
         })
     })
@@ -123,6 +126,26 @@ export default function Customize() {
           {t.profile.wallSection}
         </h1>
 
+        {!isProUser && (
+          <div style={{ backgroundColor: 'rgba(255,243,205,0.7)', border: '1.5px solid rgba(200,16,46,0.25)', borderRadius: '12px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>🔒</span>
+            <div>
+              <p style={{ fontWeight: 600, color: '#1B2B5E', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+                {lang === 'en' ? 'This feature requires a Pro plan' : 'Cette fonctionnalité est réservée au plan Pro'}
+              </p>
+              <p style={{ color: 'rgba(27,43,94,0.55)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                {lang === 'en'
+                  ? "Personalize your wall's colors, font and layout with the Pro plan."
+                  : 'Personnalisez les couleurs, la police et la disposition de votre mur avec le plan Pro.'}
+              </p>
+              <a href="/pricing" style={{ display: 'inline-block', backgroundColor: '#C8102E', color: '#fff', padding: '0.4rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none' }}>
+                {lang === 'en' ? 'Upgrade to Pro →' : 'Passer au Pro →'}
+              </a>
+            </div>
+          </div>
+        )}
+
+        <div style={{ filter: isProUser ? 'none' : 'blur(3px)', pointerEvents: isProUser ? 'auto' : 'none', userSelect: isProUser ? 'auto' : 'none' }}>
         <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(27,43,94,0.1)' }}>
           <div style={{ height: 4, backgroundColor: '#1B2B5E' }} />
 
@@ -266,6 +289,7 @@ export default function Customize() {
             </div>
 
           </form>
+        </div>
         </div>
       </main>
 
