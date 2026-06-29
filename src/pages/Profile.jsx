@@ -17,8 +17,21 @@ const inputStyle = {
 const onFocus = e => (e.target.style.borderColor = 'rgba(27,43,94,0.5)')
 const onBlur  = e => (e.target.style.borderColor = 'rgba(27,43,94,0.2)')
 
+const SECTORS = [
+  { value: 'Développement web',      en: 'Web development' },
+  { value: 'Design graphique',       en: 'Graphic design' },
+  { value: 'Marketing digital',      en: 'Digital marketing' },
+  { value: 'Conseil & Stratégie',    en: 'Consulting & Strategy' },
+  { value: 'Communication',          en: 'Communication' },
+  { value: 'Photographie',           en: 'Photography' },
+  { value: 'Rédaction & Copywriting',en: 'Writing & Copywriting' },
+  { value: 'Formation & Coaching',   en: 'Training & Coaching' },
+  { value: 'E-commerce',             en: 'E-commerce' },
+  { value: 'Autre',                  en: 'Other' },
+]
+
 export default function Profile() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -28,7 +41,11 @@ export default function Profile() {
   const [firstname, setFirstname] = useState('')
   const [company, setCompany] = useState('')
   const [activity, setActivity] = useState('')
+  const [sector, setSector] = useState('')
+  const [city, setCity] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
 
   const navigate = useNavigate()
 
@@ -46,11 +63,36 @@ export default function Profile() {
           setFirstname(data?.firstname || user.user_metadata?.first_name || '')
           setCompany(data?.company || '')
           setActivity(data?.activity || '')
+          setSector(data?.sector || '')
+          setCity(data?.city || '')
           setAvatarUrl(data?.avatar_url || '')
           setLoading(false)
         })
     })
   }, [navigate])
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError(t.profile.avatarSizeError)
+      return
+    }
+    setUploadingAvatar(true)
+    setUploadError(null)
+    const path = `${user.id}/avatar`
+    const { error: upErr } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type })
+    if (upErr) {
+      setUploadError(upErr.message)
+      setUploadingAvatar(false)
+      return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+    setAvatarUrl(publicUrl)
+    setUploadingAvatar(false)
+  }
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -64,7 +106,9 @@ export default function Profile() {
         firstname: firstname.trim() || null,
         company: company.trim() || null,
         activity: activity.trim() || null,
-        avatar_url: avatarUrl.trim() || null,
+        sector: sector || null,
+        city: city.trim() || null,
+        avatar_url: avatarUrl || null,
       })
       .eq('id', user.id)
 
@@ -111,6 +155,51 @@ export default function Profile() {
           <div style={{ height: 4, backgroundColor: '#1B2B5E' }} />
 
           <form onSubmit={handleSave} className="p-6 sm:p-8 space-y-5">
+
+            {/* Avatar upload */}
+            <div>
+              <label className="block text-sm font-medium mb-3" style={{ color: '#1B2B5E' }}>
+                {t.profile.avatarUrl}
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px solid #1B2B5E', overflow: 'hidden', flexShrink: 0, backgroundColor: '#F5F0E8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={t.profile.avatarPreview}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={e => { e.currentTarget.style.display = 'none' }}
+                    />
+                  ) : (
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(27,43,94,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    id="avatar-upload"
+                    style={{ display: 'none' }}
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    style={{ display: 'inline-block', backgroundColor: uploadingAvatar ? 'rgba(27,43,94,0.4)' : '#1B2B5E', color: '#F5F0E8', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 500, cursor: uploadingAvatar ? 'not-allowed' : 'pointer' }}
+                  >
+                    {uploadingAvatar ? t.profile.avatarUploading : t.profile.avatarChoose}
+                  </label>
+                  <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: 'rgba(27,43,94,0.4)' }}>
+                    JPG, PNG, WebP — max 5 MB
+                  </p>
+                  {uploadError && (
+                    <p style={{ marginTop: '0.3rem', fontSize: '0.75rem', color: '#C8102E' }}>{uploadError}</p>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
@@ -159,31 +248,37 @@ export default function Profile() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                {t.profile.avatarUrl}
-                <span className="ml-1 font-normal text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>
-                  {t.profile.avatarUrlNote}
-                </span>
+                {t.profile.sector}
+              </label>
+              <select
+                value={sector}
+                onChange={e => setSector(e.target.value)}
+                style={{ ...inputStyle, cursor: 'pointer' }}
+                onFocus={onFocus}
+                onBlur={onBlur}
+              >
+                <option value="">{t.profile.sectorPlaceholder}</option>
+                {SECTORS.map(s => (
+                  <option key={s.value} value={s.value}>
+                    {lang === 'en' ? s.en : s.value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
+                {t.profile.city}
               </label>
               <input
-                type="url"
-                value={avatarUrl}
-                onChange={e => setAvatarUrl(e.target.value)}
-                placeholder="https://exemple.com/photo.jpg"
+                type="text"
+                value={city}
+                onChange={e => setCity(e.target.value)}
+                placeholder={t.profile.cityPlaceholder}
                 style={inputStyle}
                 onFocus={onFocus}
                 onBlur={onBlur}
               />
-              {avatarUrl && (
-                <div className="mt-3 flex items-center gap-3">
-                  <img
-                    src={avatarUrl}
-                    alt={t.profile.avatarPreview}
-                    style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(27,43,94,0.15)' }}
-                    onError={e => (e.currentTarget.style.display = 'none')}
-                  />
-                  <span className="text-xs" style={{ color: 'rgba(27,43,94,0.4)' }}>{t.profile.avatarPreview}</span>
-                </div>
-              )}
             </div>
 
             {error && (
@@ -204,34 +299,16 @@ export default function Profile() {
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', border: 'none', cursor: 'pointer' }}
-                onMouseEnter={e => !saving && (e.currentTarget.style.opacity = '0.85')}
-                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-              >
-                {saving ? t.profile.saving : t.profile.save}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setWallBgColor('#F5F0E8')
-                  setWallPrimaryColor('#1B2B5E')
-                  setWallAccentColor('#C8102E')
-                  setWallFont('Playfair Display')
-                  setWallTitle('')
-                  setWallLayout('grid')
-                }}
-                style={{ background: 'transparent', border: '1px solid #888', color: '#888', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#555' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#888'; e.currentTarget.style.color = '#888' }}
-              >
-                {t.profile.reset}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', border: 'none', cursor: 'pointer' }}
+              onMouseEnter={e => !saving && (e.currentTarget.style.opacity = '0.85')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+            >
+              {saving ? t.profile.saving : t.profile.save}
+            </button>
 
           </form>
         </div>
