@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext'
 async function getOrCreateProfile(user) {
   const { data } = await supabase
     .from('profiles')
-    .select('slug, is_beta, beta_expires_at, plan, company, firstname, auto_reminder')
+    .select('slug, is_beta, beta_expires_at, plan, company, firstname, auto_reminder, automation_enabled, api_key')
     .eq('id', user.id)
     .single()
 
@@ -62,6 +62,10 @@ export default function Dashboard() {
   const [autoReminder, setAutoReminder] = useState(true)
   const [copiedEmbed, setCopiedEmbed] = useState(null)
   const [showEmbed, setShowEmbed] = useState(false)
+  const [showAutomation, setShowAutomation] = useState(false)
+  const [autoEnabled, setAutoEnabled] = useState(false)
+  const [apiKey, setApiKey] = useState('')
+  const [copiedApiKey, setCopiedApiKey] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const exportRef = useRef(null)
   const [showNavMenu, setShowNavMenu] = useState(false)
@@ -139,17 +143,25 @@ export default function Dashboard() {
     return () => { supabase.removeChannel(channel) }
   }, [user])
 
-  // Sync auto_reminder from profile once loaded
+  // Sync profile toggles once loaded
   useEffect(() => {
-    if (profile && profile.auto_reminder !== undefined) {
-      setAutoReminder(profile.auto_reminder !== false)
-    }
+    if (!profile) return
+    if (profile.auto_reminder !== undefined) setAutoReminder(profile.auto_reminder !== false)
+    setAutoEnabled(profile.automation_enabled === true)
+    setApiKey(profile.api_key || '')
   }, [profile])
 
   const toggleAutoReminder = async (value) => {
     setAutoReminder(value)
     if (user) {
       await supabase.from('profiles').update({ auto_reminder: value }).eq('id', user.id)
+    }
+  }
+
+  const toggleAutomation = async (value) => {
+    setAutoEnabled(value)
+    if (user) {
+      await supabase.from('profiles').update({ automation_enabled: value }).eq('id', user.id)
     }
   }
 
@@ -564,6 +576,27 @@ export default function Dashboard() {
               : (lang === 'en' ? 'Embed on my website ▼' : 'Intégrer sur mon site ▼')}
           </button>
           )}
+          {user && (
+          <button
+            onClick={() => setShowAutomation(s => !s)}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(27,43,94,0.2)',
+              color: '#1B2B5E',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(27,43,94,0.05)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            {showAutomation
+              ? (lang === 'en' ? 'Hide ▲' : 'Masquer ▲')
+              : (lang === 'en' ? 'Automation ▼' : 'Automatisation ▼')}
+          </button>
+          )}
         </div>
 
         {showStats && (
@@ -735,6 +768,110 @@ export default function Dashboard() {
                   ? 'Compatible with WordPress, Wix, Squarespace and all CMS'
                   : 'Compatible avec WordPress, Wix, Squarespace et tous les CMS'}
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Automation section */}
+        {user && showAutomation && (
+          <div className="bg-white rounded-2xl mb-8" style={{ border: '1px solid rgba(27,43,94,0.1)', animation: 'statsReveal 0.3s ease both' }}>
+            <div className="p-6">
+              <h3 className="font-display font-semibold text-lg mb-1" style={{ color: '#1B2B5E' }}>
+                {t.dash.automationTitle}
+              </h3>
+              <p className="text-sm mb-5" style={{ color: 'rgba(27,43,94,0.5)' }}>
+                {t.dash.automationDesc}
+              </p>
+
+              {/* Enable toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <button
+                  onClick={() => toggleAutomation(!autoEnabled)}
+                  style={{
+                    width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+                    backgroundColor: autoEnabled ? '#1B2B5E' : 'rgba(27,43,94,0.15)',
+                    position: 'relative', flexShrink: 0,
+                    transition: 'background-color 0.2s ease',
+                  }}
+                  aria-label="Toggle automation"
+                >
+                  <div style={{
+                    position: 'absolute', top: 3, width: 18, height: 18,
+                    borderRadius: '50%', backgroundColor: '#ffffff',
+                    left: autoEnabled ? 23 : 3,
+                    transition: 'left 0.2s ease',
+                  }} />
+                </button>
+                <span style={{ fontSize: '0.85rem', color: autoEnabled ? '#1B2B5E' : 'rgba(27,43,94,0.5)', fontWeight: 500 }}>
+                  {t.dash.automationToggleLabel}
+                </span>
+              </div>
+
+              {/* Instructions (grayed when off) */}
+              <div style={{ opacity: autoEnabled ? 1 : 0.35, pointerEvents: autoEnabled ? 'auto' : 'none', transition: 'opacity 0.2s ease' }}>
+
+                {/* Step 1 — API key */}
+                <div className="mb-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(27,43,94,0.45)' }}>
+                    {lang === 'en' ? 'Step 1' : 'Étape 1'} — {t.dash.automationStep1}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 rounded-lg overflow-x-auto" style={{ backgroundColor: '#1B2B5E', padding: '0.875rem 1rem' }}>
+                      <code style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#F5F0E8', wordBreak: 'break-all', display: 'block' }}>
+                        {apiKey || '—'}
+                      </code>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!apiKey) return
+                        navigator.clipboard.writeText(apiKey)
+                        setCopiedApiKey(true)
+                        setTimeout(() => setCopiedApiKey(false), 2000)
+                      }}
+                      className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg transition-all"
+                      style={copiedApiKey
+                        ? { backgroundColor: 'rgba(27,43,94,0.08)', color: '#1B2B5E' }
+                        : { backgroundColor: '#1B2B5E', color: '#F5F0E8' }}
+                    >
+                      {copiedApiKey ? t.dash.copied : t.dash.copy}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Step 2 — Zapier instructions */}
+                <div className="mb-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(27,43,94,0.45)' }}>
+                    {lang === 'en' ? 'Step 2' : 'Étape 2'} — {lang === 'en' ? 'Connect on Zapier' : 'Connectez-vous sur Zapier'}
+                  </p>
+                  <div style={{ backgroundColor: '#F5F0E8', borderRadius: '12px', padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#1B2B5E', lineHeight: 1.75 }}>
+                    {lang === 'en' ? (
+                      <ol style={{ margin: 0, paddingLeft: '1.1rem' }}>
+                        <li>Go to <strong>zapier.com</strong> → Create a Zap</li>
+                        <li>Choose your trigger (Stripe, Calendly, WooCommerce…)</li>
+                        <li>Choose <strong>Webhooks by Zapier</strong> as the action</li>
+                        <li>Paste your API key and the URL: <code style={{ backgroundColor: 'rgba(27,43,94,0.08)', padding: '0.1rem 0.35rem', borderRadius: '4px', fontSize: '0.8rem' }}>https://dixitapp.tech/api/invite</code></li>
+                      </ol>
+                    ) : (
+                      <ol style={{ margin: 0, paddingLeft: '1.1rem' }}>
+                        <li>Allez sur <strong>zapier.com</strong> → Créer un Zap</li>
+                        <li>Choisissez votre déclencheur (Stripe, Calendly, WooCommerce…)</li>
+                        <li>Choisissez <strong>Webhooks by Zapier</strong> comme action</li>
+                        <li>Collez votre clé API et l'URL : <code style={{ backgroundColor: 'rgba(27,43,94,0.08)', padding: '0.1rem 0.35rem', borderRadius: '4px', fontSize: '0.8rem' }}>https://dixitapp.tech/api/invite</code></li>
+                      </ol>
+                    )}
+                  </div>
+                </div>
+
+                <a href="https://zapier.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                  <button
+                    style={{ backgroundColor: '#FF4A00', color: '#ffffff', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                  >
+                    {t.dash.automationOpenZapier}
+                  </button>
+                </a>
+              </div>
             </div>
           </div>
         )}
