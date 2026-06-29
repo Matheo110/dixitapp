@@ -417,39 +417,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section style={{ backgroundColor: '#ffffff', padding: '5rem 1.5rem' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <RevealDiv>
-            <h2
-              style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '2rem', color: '#1B2B5E', textAlign: 'center', marginBottom: '0.75rem' }}
-            >
-              {t.landing.howItWorks}
-            </h2>
-            <div style={{ width: 40, height: 3, backgroundColor: '#C8102E', borderRadius: '9999px', margin: '0 auto 3.5rem' }} />
-          </RevealDiv>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem' }}>
-            {t.landing.steps.map((step, i) => (
-              <RevealDiv key={i} delay={i * 150}>
-                <div style={{ textAlign: 'center', padding: '1.5rem' }}>
-                  <div
-                    style={{ width: '3rem', height: '3rem', borderRadius: '50%', backgroundColor: '#F5F0E8', border: '2px solid #1B2B5E', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', fontFamily: 'Playfair Display, serif', fontWeight: 700, color: '#1B2B5E', fontSize: '0.85rem' }}
-                  >
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  <h3 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', color: '#1B2B5E', marginBottom: '0.6rem' }}>
-                    {step.title}
-                  </h3>
-                  <p style={{ fontSize: '0.9rem', color: '#666', lineHeight: 1.65 }}>
-                    {step.desc}
-                  </p>
-                </div>
-              </RevealDiv>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── PRICING ── */}
       <section ref={pricingRef} style={{ backgroundColor: '#F5F0E8', padding: '5rem 1.5rem' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
