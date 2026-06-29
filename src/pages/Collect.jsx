@@ -66,6 +66,7 @@ export default function Collect() {
           if (profile) {
             setOpenProfile(profile)
             setOwnerProfile(profile)
+            if (!isPro(profile)) setMode('text')
           } else {
             setInvalidLink(true)
           }
@@ -79,6 +80,7 @@ export default function Collect() {
           .eq('id', data.user_id)
           .single()
         setOwnerProfile(profile)
+        if (!isPro(profile)) setMode('text')
         setInviteLoading(false)
       })
   }, [token])
@@ -315,53 +317,35 @@ export default function Collect() {
 
             <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
 
-              {/* Mode selector */}
-              <div>
-                <p className="text-sm font-medium mb-3" style={{ color: '#1B2B5E' }}>
-                  {t.collect.modeQuestion}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => switchMode('text')}
-                    className="flex flex-col items-center gap-2 py-5 rounded-xl font-medium text-sm transition-all"
-                    style={
-                      mode === 'text'
-                        ? { backgroundColor: collectPrimary, color: '#F5F0E8', border: `2px solid ${collectPrimary}` }
-                        : { backgroundColor: 'transparent', color: collectPrimary, border: `2px solid ${collectPrimary}` }
-                    }
-                  >
-                    <span className="text-2xl">✍️</span>
-                    {t.collect.textMode}
-                  </button>
-                  {isPro(ownerProfile) ? (
-                    <button
-                      type="button"
-                      onClick={() => switchMode('video')}
-                      className="flex flex-col items-center gap-2 py-5 rounded-xl font-medium text-sm transition-all"
-                      style={
-                        mode === 'video'
-                          ? { backgroundColor: collectPrimary, color: '#F5F0E8', border: `2px solid ${collectPrimary}` }
-                          : { backgroundColor: 'transparent', color: collectPrimary, border: `2px solid ${collectPrimary}` }
-                      }
-                    >
-                      <span className="text-2xl">🎥</span>
-                      {t.collect.videoMode}
-                    </button>
-                  ) : (
-                    <div
-                      className="flex flex-col items-center gap-1.5 py-5 rounded-xl font-medium text-sm"
-                      style={{ color: 'rgba(27,43,94,0.3)', border: '2px dashed rgba(27,43,94,0.15)', cursor: 'not-allowed' }}
-                    >
-                      <span className="text-2xl" style={{ opacity: 0.4 }}>🎥</span>
-                      <span>{t.collect.videoMode}</span>
-                      <span style={{ fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '-0.25rem' }}>
-                        🔒 {t.collect.videoLocked}
-                      </span>
-                    </div>
-                  )}
+              {/* Mode selector — only shown for Pro/agency/beta owners */}
+              {isPro(ownerProfile) && (
+                <div>
+                  <p className="text-sm font-medium mb-3" style={{ color: '#1B2B5E' }}>
+                    {t.collect.modeQuestion}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: 'text', icon: '✍️', label: t.collect.textMode },
+                      { key: 'video', icon: '🎥', label: t.collect.videoMode },
+                    ].map(({ key, icon, label }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => switchMode(key)}
+                        className="flex flex-col items-center gap-2 py-5 rounded-xl font-medium text-sm transition-all"
+                        style={
+                          mode === key
+                            ? { backgroundColor: collectPrimary, color: '#F5F0E8', border: `2px solid ${collectPrimary}` }
+                            : { backgroundColor: 'transparent', color: collectPrimary, border: `2px solid ${collectPrimary}` }
+                        }
+                      >
+                        <span className="text-2xl">{icon}</span>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* ── Text mode ── */}
               {mode === 'text' && (
