@@ -67,6 +67,8 @@ export default function Dashboard() {
   const [showNavMenu, setShowNavMenu] = useState(false)
   const navMenuRef = useRef(null)
   const [copiedInvite, setCopiedInvite] = useState(null)
+  const [unseenCount, setUnseenCount] = useState(0)
+  const [showToast, setShowToast] = useState(false)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
 
@@ -91,6 +93,15 @@ export default function Dashboard() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     setTestimonials(data || [])
+
+    const lastVisit = localStorage.getItem('dixitapp_last_visit')
+    if (lastVisit) {
+      const cutoff = new Date(lastVisit)
+      const unseen = (data || []).filter(t => new Date(t.created_at) > cutoff).length
+      setUnseenCount(unseen)
+    }
+    localStorage.setItem('dixitapp_last_visit', new Date().toISOString())
+
     setLoading(false)
   }, [user])
 
@@ -107,6 +118,25 @@ export default function Dashboard() {
   }, [user])
 
   useEffect(() => { fetchInvitations() }, [fetchInvitations])
+
+  // Real-time: new testimonials
+  useEffect(() => {
+    if (!user) return
+    const channel = supabase
+      .channel(`testimonials-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'testimonials', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setTestimonials(prev => [payload.new, ...prev])
+          setUnseenCount(c => c + 1)
+          setShowToast(true)
+          setTimeout(() => setShowToast(false), 4000)
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [user])
 
   // Sync auto_reminder from profile once loaded
   useEffect(() => {
@@ -414,6 +444,10 @@ export default function Dashboard() {
       <style>{`
         @keyframes statsReveal {
           from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastIn {
+          from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
@@ -860,9 +894,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-5">
             <h3
               className="font-display font-semibold text-xl"
-              style={{ color: '#1B2B5E' }}
+              style={{ color: '#1B2B5E', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
               {t.dash.testimonialsTitle}
+              {unseenCount > 0 && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#C8102E', color: '#ffffff', borderRadius: '50%', width: 20, height: 20, fontSize: '0.7rem', fontWeight: 700, fontFamily: 'Inter, sans-serif', flexShrink: 0 }}>
+                  {unseenCount > 9 ? '9+' : unseenCount}
+                </span>
+              )}
             </h3>
             <div className="flex items-center gap-3">
               {/* Export dropdown */}
@@ -948,6 +987,13 @@ export default function Dashboard() {
         <span style={{ color: '#444', fontSize: '0.8rem', margin: '0 0.4rem' }}>|</span>
         <a href="/privacy" style={{ color: '#666', fontSize: '0.8rem', textDecoration: 'none' }}>Confidentialité</a>
       </footer>
+
+      {/* ── TOAST ── */}
+      {showToast && (
+        <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', backgroundColor: '#1B2B5E', color: '#ffffff', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', zIndex: 60, fontSize: '0.9rem', fontWeight: 500, borderLeft: '3px solid #C8102E', animation: 'toastIn 0.3s ease', maxWidth: '320px' }}>
+          {t.dash.newTestimonialToast}
+        </div>
+      )}
     </div>
   )
 }

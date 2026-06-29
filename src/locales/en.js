@@ -103,6 +103,7 @@ export const en = {
     chartTitle: 'Testimonials per week',
     responseRate: 'Response rate',
     avgRating: 'Average rating',
+    newTestimonialToast: 'New testimonial received! 🎉',
   },
 
   collect: {

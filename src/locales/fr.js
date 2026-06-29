@@ -103,6 +103,7 @@ export const fr = {
     chartTitle: 'Témoignages par semaine',
     responseRate: 'Taux de réponse',
     avgRating: 'Note moyenne',
+    newTestimonialToast: 'Nouveau témoignage reçu ! 🎉',
   },
 
   collect: {
