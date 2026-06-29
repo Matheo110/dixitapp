@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLanguage } from '../context/LanguageContext'
+import { isPro } from '../lib/plan'
 
 const FONT_FAMILY = {
   'Playfair Display': "'Playfair Display', Georgia, serif",
@@ -22,7 +23,7 @@ export default function Wall() {
   const shareRef = useRef(null)
 
   useEffect(() => {
-    const PROFILE_COLS = 'id, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_title, wall_layout, company, firstname, activity, avatar_url'
+    const PROFILE_COLS = 'id, wall_bg_color, wall_primary_color, wall_accent_color, wall_font, wall_title, wall_layout, company, firstname, activity, avatar_url, plan, is_beta, beta_expires_at'
     async function load() {
       // Try by slug field first (custom slug), fall back to UUID id
       let { data: pData } = await supabase
@@ -102,6 +103,21 @@ export default function Wall() {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+
+      {/* ── BRANDING BANNER (free plan only) ── */}
+      {!isPro(profile) && (
+        <div style={{ backgroundColor: '#1B2B5E', color: '#F5F0E8', textAlign: 'center', padding: '0.5rem', fontSize: '0.8rem' }}>
+          {lang === 'en' ? 'Powered by ' : 'Propulsé par '}
+          <a
+            href="https://dixitapp.tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#C8102E', fontWeight: 700, textDecoration: 'none' }}
+          >
+            Dixitapp
+          </a>
+        </div>
+      )}
 
       {/* ── HEADER ── */}
       <header style={{ backgroundColor: primary, padding: '1.25rem 1.5rem' }}>
@@ -298,17 +314,19 @@ export default function Wall() {
         )}
       </div>
 
-      {/* ── FOOTER BADGE ── */}
-      <footer className="text-center py-6" style={{ borderTop: `1px solid ${primary}18` }}>
-        <a
-          href="https://dixitapp.tech"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontSize: '0.72rem', color: '#888', textDecoration: 'none', letterSpacing: '0.03em' }}
-        >
-          {t.wall.poweredBy} <strong style={{ fontWeight: 600 }}>Dixitapp</strong>
-        </a>
-      </footer>
+      {/* ── FOOTER BADGE (free plan only) ── */}
+      {!isPro(profile) && (
+        <footer className="text-center py-6" style={{ borderTop: `1px solid ${primary}18` }}>
+          <a
+            href="https://dixitapp.tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: '0.72rem', color: '#888', textDecoration: 'none', letterSpacing: '0.03em' }}
+          >
+            {t.wall.poweredBy} <strong style={{ fontWeight: 600 }}>Dixitapp</strong>
+          </a>
+        </footer>
+      )}
     </div>
   )
 }
