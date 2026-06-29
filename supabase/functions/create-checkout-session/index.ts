@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       'metadata[priceId]': priceId,
+      allow_promotion_codes: 'true',
     })
 
     const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
