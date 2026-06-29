@@ -59,7 +59,7 @@ export const en = {
 
   dash: {
     hello: 'Hello',
-    betaBanner: 'You are in free beta until August 1, 2026.',
+    betaBanner: 'You are in free beta until July 31, 2026.',
     betaBannerLink: 'Discover our plans →',
     limitBanner: 'You have reached the 5 testimonial limit on the free plan.',
     limitBannerLink: 'Upgrade to Pro for unlimited testimonials →',

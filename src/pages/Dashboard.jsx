@@ -481,7 +481,7 @@ export default function Dashboard() {
         </h2>
 
         {/* Beta banner */}
-        {profile?.is_beta && new Date() < new Date('2026-08-01') && (
+        {profile?.is_beta && new Date() < new Date('2026-07-31') && (
           <div style={{ backgroundColor: '#F0F4FF', borderLeft: '3px solid #1B2B5E', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
             <p style={{ color: '#1B2B5E', fontSize: '0.875rem' }}>
               {t.dash.betaBanner}{' '}

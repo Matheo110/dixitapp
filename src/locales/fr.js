@@ -59,7 +59,7 @@ export const fr = {
 
   dash: {
     hello: 'Bonjour',
-    betaBanner: "Vous êtes en période bêta gratuite jusqu'au 1er août 2026.",
+    betaBanner: "Vous êtes en période bêta gratuite jusqu'au 31 juillet 2026.",
     betaBannerLink: 'Découvrez nos plans →',
     limitBanner: 'Vous avez atteint la limite de 5 témoignages du plan gratuit.',
     limitBannerLink: 'Passez au plan Pro pour des témoignages illimités →',
