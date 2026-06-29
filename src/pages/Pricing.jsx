@@ -8,7 +8,7 @@ export default function Pricing() {
   const [loading, setLoading] = useState(null)
   const [checkoutError, setCheckoutError] = useState(null)
   const navigate = useNavigate()
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
 
   const plans = [
     {
@@ -40,6 +40,7 @@ export default function Pricing() {
       cta: t.pricing.ctaAgency,
       featured: false,
       priceId: 'price_1Tl6xmIxd1EjjYKHqEEKndhX',
+      comingSoon: true,
     },
   ]
 
@@ -158,6 +159,11 @@ export default function Pricing() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                       {f}
+                      {plan.comingSoon && (
+                        <em style={{ fontSize: '0.7rem', color: '#888', fontStyle: 'italic', marginLeft: '0.2rem', flexShrink: 0 }}>
+                          {lang === 'en' ? '(soon)' : '(bientôt)'}
+                        </em>
+                      )}
                     </li>
                   ))}
                 </ul>
