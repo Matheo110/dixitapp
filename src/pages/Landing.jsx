@@ -490,17 +490,31 @@ export default function Landing() {
                       </li>
                     ))}
                   </ul>
-                  <button
-                    onClick={() => navigate(plan.href)}
-                    style={plan.featured
-                      ? { backgroundColor: '#C8102E', color: '#ffffff', width: '100%', padding: '0.75rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.875rem', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s' }
-                      : { backgroundColor: '#1B2B5E', color: '#F5F0E8', width: '100%', padding: '0.75rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.875rem', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s' }
-                    }
-                    onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                  >
-                    {plan.cta}
-                  </button>
+                  {plan.comingSoon ? (
+                    <div style={{ textAlign: 'center' }}>
+                      <button
+                        disabled
+                        style={{ backgroundColor: '#888', color: '#F5F0E8', width: '100%', padding: '0.75rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.875rem', border: 'none', cursor: 'not-allowed', opacity: 0.6 }}
+                      >
+                        {plan.cta}
+                      </button>
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.78rem', color: '#888', fontStyle: 'italic' }}>
+                        {lang === 'en' ? 'Coming soon' : 'Bientôt disponible'}
+                      </p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => navigate(plan.href)}
+                      style={plan.featured
+                        ? { backgroundColor: '#C8102E', color: '#ffffff', width: '100%', padding: '0.75rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.875rem', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s' }
+                        : { backgroundColor: '#1B2B5E', color: '#F5F0E8', width: '100%', padding: '0.75rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.875rem', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s' }
+                      }
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                    >
+                      {plan.cta}
+                    </button>
+                  )}
                 </div>
               </RevealDiv>
             ))}
