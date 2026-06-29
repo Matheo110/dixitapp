@@ -215,6 +215,11 @@ export const fr = {
     deleteConfirmWord: 'SUPPRIMER',
     deleteConfirmPlaceholder: 'Tapez SUPPRIMER',
     deleteDeleting: 'Suppression…',
+    collectSection: 'Personnaliser ma page de collecte',
+    collectPageTitle: 'Titre de la page',
+    collectPageTitlePlaceholder: 'Ex : Partagez votre expérience',
+    collectSubtitleLabel: 'Sous-titre',
+    collectSubtitlePlaceholder: 'Ex : Votre avis compte. Merci de prendre 2 minutes.',
   },
 
   pricing: {

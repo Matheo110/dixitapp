@@ -5,6 +5,7 @@ import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import Customize from './pages/Customize'
+import CustomizeCollect from './pages/CustomizeCollect'
 import Collect from './pages/Collect'
 import Wall from './pages/Wall'
 import ResetPassword from './pages/ResetPassword'
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/customize" element={<PrivateRoute><Customize /></PrivateRoute>} />
+        <Route path="/customize-collect" element={<PrivateRoute><CustomizeCollect /></PrivateRoute>} />
         <Route path="/collect/:slug" element={<Collect />} />
         <Route path="/wall/:slug" element={<Wall />} />
         <Route path="/reset-password" element={<ResetPassword />} />

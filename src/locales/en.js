@@ -215,6 +215,11 @@ export const en = {
     deleteConfirmWord: 'DELETE',
     deleteConfirmPlaceholder: 'Type DELETE',
     deleteDeleting: 'Deleting…',
+    collectSection: 'Customize my collect page',
+    collectPageTitle: 'Page title',
+    collectPageTitlePlaceholder: 'E.g. Share your experience',
+    collectSubtitleLabel: 'Subtitle',
+    collectSubtitlePlaceholder: 'E.g. Your feedback matters. Thank you for taking 2 minutes.',
   },
 
   pricing: {

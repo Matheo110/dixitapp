@@ -6,6 +6,13 @@ import { useLanguage } from '../context/LanguageContext'
 
 const EMPTY = { name: '', message: '', rating: 0 }
 
+const FONT_FAMILY = {
+  'Playfair Display': "'Playfair Display', Georgia, serif",
+  'Inter': "'Inter', sans-serif",
+  'Georgia': 'Georgia, serif',
+  'Arial': 'Arial, sans-serif',
+}
+
 const inputBase = {
   backgroundColor: '#F5F0E8',
   border: '1.5px solid rgba(27,43,94,0.2)',
@@ -52,7 +59,7 @@ export default function Collect() {
           // Fallback: treat token as a profile slug for open collect form
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, firstname, company, activity, custom_message, avatar_url')
+            .select('id, firstname, company, activity, custom_message, avatar_url, collect_bg_color, collect_primary_color, collect_accent_color, collect_font, collect_title, collect_subtitle')
             .eq('slug', token)
             .maybeSingle()
           if (profile) {
@@ -67,7 +74,7 @@ export default function Collect() {
         setInvitation(data)
         const { data: profile } = await supabase
           .from('profiles')
-          .select('firstname, company, activity, custom_message, avatar_url')
+          .select('firstname, company, activity, custom_message, avatar_url, collect_bg_color, collect_primary_color, collect_accent_color, collect_font, collect_title, collect_subtitle')
           .eq('id', data.user_id)
           .single()
         setOwnerProfile(profile)
@@ -196,9 +203,16 @@ export default function Collect() {
     }
   }
 
+  const collectBg      = ownerProfile?.collect_bg_color      ?? '#F5F0E8'
+  const collectPrimary = ownerProfile?.collect_primary_color ?? '#1B2B5E'
+  const collectAccent  = ownerProfile?.collect_accent_color  ?? '#C8102E'
+  const collectFont    = FONT_FAMILY[ownerProfile?.collect_font] ?? FONT_FAMILY['Playfair Display']
+  const collectTitle   = ownerProfile?.collect_title          || t.collect.shareExperience
+  const collectSub     = ownerProfile?.collect_subtitle       || ownerProfile?.custom_message || t.collect.defaultMessage
+
   if (inviteLoading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: collectBg }}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm" style={{ color: 'rgba(27,43,94,0.45)' }}>{t.collect.loading}</p>
@@ -209,7 +223,7 @@ export default function Collect() {
 
   if (invalidLink) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: collectBg }}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center max-w-sm">
@@ -227,7 +241,7 @@ export default function Collect() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: collectBg }}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center max-w-sm">
@@ -252,7 +266,7 @@ export default function Collect() {
   const showSubmit = mode === 'text' || (mode === 'video' && recordState === 'preview')
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: collectBg }}>
       <Navbar />
 
       <div className="flex-1 py-14 px-4">
@@ -283,20 +297,20 @@ export default function Collect() {
               </div>
             )}
             <h1
-              className="font-display font-bold leading-tight mb-3"
-              style={{ color: '#1B2B5E', fontSize: '2.5rem' }}
+              className="font-bold leading-tight mb-3"
+              style={{ color: collectPrimary, fontSize: '2.5rem', fontFamily: collectFont }}
             >
-              {t.collect.shareExperience}
+              {collectTitle}
             </h1>
-            <p className="text-sm" style={{ color: 'rgba(27,43,94,0.5)' }}>
-              {ownerProfile?.custom_message || t.collect.defaultMessage}
+            <p className="text-sm" style={{ color: `${collectPrimary}80` }}>
+              {collectSub}
             </p>
-            <div className="mx-auto mt-5 rounded-full" style={{ width: 40, height: 3, backgroundColor: '#C8102E' }} />
+            <div className="mx-auto mt-5 rounded-full" style={{ width: 40, height: 3, backgroundColor: collectAccent }} />
           </div>
 
           {/* Form card */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div style={{ height: 4, backgroundColor: '#C8102E' }} />
+            <div style={{ height: 4, backgroundColor: collectAccent }} />
 
             <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
 
@@ -317,8 +331,8 @@ export default function Collect() {
                       className="flex flex-col items-center gap-2 py-5 rounded-xl font-medium text-sm transition-all"
                       style={
                         mode === key
-                          ? { backgroundColor: '#1B2B5E', color: '#F5F0E8', border: '2px solid #1B2B5E' }
-                          : { backgroundColor: 'transparent', color: '#1B2B5E', border: '2px solid #1B2B5E' }
+                          ? { backgroundColor: collectPrimary, color: '#F5F0E8', border: `2px solid ${collectPrimary}` }
+                          : { backgroundColor: 'transparent', color: collectPrimary, border: `2px solid ${collectPrimary}` }
                       }
                     >
                       <span className="text-2xl">{icon}</span>
@@ -333,7 +347,7 @@ export default function Collect() {
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                      {t.collect.yourFirstName} <span style={{ color: '#C8102E' }}>*</span>
+                      {t.collect.yourFirstName} <span style={{ color: collectAccent }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -350,7 +364,7 @@ export default function Collect() {
 
                   <div>
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                      {t.collect.yourTestimonial} <span style={{ color: '#C8102E' }}>*</span>
+                      {t.collect.yourTestimonial} <span style={{ color: collectAccent }}>*</span>
                     </label>
                     <textarea
                       value={form.message}
@@ -377,7 +391,7 @@ export default function Collect() {
                           type="button"
                           onClick={() => setRating(star)}
                           className="text-3xl leading-none transition-transform hover:scale-110 active:scale-95"
-                          style={{ color: star <= form.rating ? '#C8102E' : 'rgba(27,43,94,0.2)' }}
+                          style={{ color: star <= form.rating ? collectAccent : 'rgba(27,43,94,0.2)' }}
                           aria-label={`${star}`}
                         >
                           ★
@@ -405,7 +419,7 @@ export default function Collect() {
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1B2B5E' }}>
-                      {t.collect.yourFirstName} <span style={{ color: '#C8102E' }}>*</span>
+                      {t.collect.yourFirstName} <span style={{ color: collectAccent }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -455,7 +469,7 @@ export default function Collect() {
                         >
                           <span
                             className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: '#C8102E', animation: 'pulse 1.5s infinite' }}
+                            style={{ backgroundColor: collectAccent, animation: 'pulse 1.5s infinite' }}
                           />
                           <span className="text-white text-xs font-medium">{t.collect.recordingLabel}</span>
                         </div>
@@ -464,9 +478,9 @@ export default function Collect() {
                             type="button"
                             onClick={stopRecording}
                             className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all"
-                            style={{ backgroundColor: '#C8102E', color: '#ffffff' }}
-                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#a80d26')}
-                            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8102E')}
+                            style={{ backgroundColor: collectAccent, color: '#ffffff' }}
+                            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                           >
                             {t.collect.stopAndSend}
                           </button>
@@ -509,7 +523,7 @@ export default function Collect() {
                           type="button"
                           onClick={() => setVideoRating(prev => prev === star ? 0 : star)}
                           className="text-3xl leading-none transition-transform hover:scale-110 active:scale-95"
-                          style={{ color: star <= videoRating ? '#C8102E' : '#888888' }}
+                          style={{ color: star <= videoRating ? collectAccent : '#888888' }}
                           aria-label={`${star}`}
                         >
                           ★
@@ -550,9 +564,9 @@ export default function Collect() {
                   type="submit"
                   disabled={loading}
                   className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#C8102E' }}
-                  onMouseEnter={e => !loading && (e.target.style.backgroundColor = '#a80d26')}
-                  onMouseLeave={e => (e.target.style.backgroundColor = '#C8102E')}
+                  style={{ backgroundColor: collectAccent }}
+                  onMouseEnter={e => !loading && (e.target.style.opacity = '0.85')}
+                  onMouseLeave={e => (e.target.style.opacity = '1')}
                 >
                   {loading ? t.collect.submitting : t.collect.submit}
                 </button>

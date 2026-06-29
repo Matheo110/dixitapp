@@ -426,6 +426,15 @@ export default function Dashboard() {
               {lang === 'en' ? 'Customize my wall' : 'Personnaliser mon mur'}
             </button>
 
+            <button
+              onClick={() => { setShowNavMenu(false); navigate('/customize-collect') }}
+              style={{ display: 'block', width: '100%', padding: '0.75rem 1.25rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#1B2B5E' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              {lang === 'en' ? 'Customize collect page' : 'Personnaliser ma page de collecte'}
+            </button>
+
             <div style={{ height: '1px', backgroundColor: '#E0D8CC' }} />
 
             <button
