@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -506,24 +507,34 @@ export default function Dashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8" style={{ perspective: '1000px' }}>
           {[
             { label: t.dash.statsReceived, value: stats.received, color: '#1B2B5E' },
             { label: t.dash.statsApproved, value: stats.approved, color: '#1B2B5E' },
             { label: t.dash.statsPending, value: stats.pending, color: '#C8102E' },
-          ].map(({ label, value, color }) => (
-            <div
+          ].map(({ label, value, color }, i) => (
+            <motion.div
               key={label}
+              initial={{ rotateX: -90, opacity: 0, y: -20 }}
+              animate={{ rotateX: 0, opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+              whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(27,43,94,0.12)' }}
               className="bg-white rounded-2xl p-4 sm:p-6"
-              style={{ border: '1px solid rgba(27,43,94,0.1)' }}
+              style={{ border: '1px solid rgba(27,43,94,0.1)', transformOrigin: 'center top', cursor: 'default' }}
             >
-              <div className="font-display font-bold text-3xl sm:text-4xl" style={{ color }}>
+              <motion.div
+                className="font-display font-bold text-3xl sm:text-4xl"
+                style={{ color }}
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.4, delay: i * 0.1 + 0.35, type: 'spring', stiffness: 250 }}
+              >
                 {value}
-              </div>
+              </motion.div>
               <div className="text-xs sm:text-sm mt-1 leading-snug" style={{ color: 'rgba(27,43,94,0.45)' }}>
                 {label}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -1149,14 +1160,17 @@ export default function Dashboard() {
             <EmptyState tab={tab} />
           ) : (
             <div className="grid gap-3">
-              {filtered.map(item => (
-                <TestimonialCard
-                  key={item.id}
-                  testimonial={item}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                />
-              ))}
+              <AnimatePresence>
+                {filtered.map((item, i) => (
+                  <TestimonialCard
+                    key={item.id}
+                    testimonial={item}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    index={i}
+                  />
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </div>
@@ -1198,7 +1212,7 @@ function EmptyState({ tab }) {
   )
 }
 
-function TestimonialCard({ testimonial, onApprove, onReject }) {
+function TestimonialCard({ testimonial, onApprove, onReject, index = 0 }) {
   const { t, lang } = useLanguage()
   const [rejecting, setRejecting] = useState(false)
   const initials = testimonial.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -1207,6 +1221,13 @@ function TestimonialCard({ testimonial, onApprove, onReject }) {
   })
 
   return (
+    <motion.div
+      initial={{ x: 60, opacity: 0, rotateY: -8 }}
+      animate={{ x: 0, opacity: 1, rotateY: 0 }}
+      exit={{ x: -60, opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.3), ease: 'easeOut' }}
+      style={{ perspective: '800px' }}
+    >
     <div
       className="bg-white rounded-2xl p-5 sm:p-6 transition-all"
       style={{
@@ -1298,5 +1319,6 @@ function TestimonialCard({ testimonial, onApprove, onReject }) {
         </div>
       </div>
     </div>
+    </motion.div>
   )
 }

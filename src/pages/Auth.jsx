@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { generateSlug } from '../lib/slug'
@@ -121,13 +122,31 @@ export default function Auth() {
   const passwordStrength = 4 - passwordErrors.length
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8', position: 'relative', overflow: 'hidden' }}>
+      <motion.div
+        style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}
+        animate={{
+          background: [
+            'radial-gradient(ellipse at 15% 85%, rgba(200,16,46,0.07) 0%, transparent 55%), radial-gradient(ellipse at 85% 15%, rgba(27,43,94,0.09) 0%, transparent 55%)',
+            'radial-gradient(ellipse at 85% 85%, rgba(200,16,46,0.07) 0%, transparent 55%), radial-gradient(ellipse at 15% 15%, rgba(27,43,94,0.09) 0%, transparent 55%)',
+            'radial-gradient(ellipse at 50% 10%, rgba(200,16,46,0.06) 0%, transparent 55%), radial-gradient(ellipse at 50% 90%, rgba(27,43,94,0.08) 0%, transparent 55%)',
+            'radial-gradient(ellipse at 15% 85%, rgba(200,16,46,0.07) 0%, transparent 55%), radial-gradient(ellipse at 85% 15%, rgba(27,43,94,0.09) 0%, transparent 55%)',
+          ]
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
       <Navbar />
 
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="flex-1 flex items-center justify-center px-4 py-12" style={{ position: 'relative', zIndex: 1 }}>
         <div className="w-full max-w-md">
 
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, rotateX: -12, y: 40, scale: 0.97 }}
+            animate={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
+            transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] }}
+            style={{ perspective: '1000px', transformOrigin: 'center top' }}
+          >
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.65)', boxShadow: '0 24px 64px rgba(27,43,94,0.13), 0 0 0 1px rgba(255,255,255,0.5)' }}>
             <div style={{ height: 4, backgroundColor: '#C8102E' }} />
 
             <div className="px-8 pt-8 pb-10">
@@ -366,6 +385,7 @@ export default function Auth() {
 
             </div>
           </div>
+          </motion.div>
 
           <p className="text-center text-xs mt-5" style={{ color: 'rgba(27,43,94,0.4)' }}>
             © 2025 dixitapp.tech — Fait en France 🇫🇷

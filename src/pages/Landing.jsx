@@ -124,7 +124,7 @@ const DEMO_EN = [
 
 function ParticleBackground() {
   const particles = useMemo(() =>
-    Array.from({ length: 22 }, (_, i) => ({
+    Array.from({ length: 52 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 100,
@@ -153,6 +153,31 @@ function ParticleBackground() {
           }}
         />
       ))}
+    </div>
+  )
+}
+
+function HeroSphere() {
+  return (
+    <div style={{ position: 'absolute', right: '2%', top: '50%', marginTop: '-240px', width: 480, height: 480, opacity: 0.055, pointerEvents: 'none', zIndex: 0 }}>
+      <motion.svg
+        viewBox="-240 -240 480 480"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+        style={{ width: '100%', height: '100%', overflow: 'visible' }}
+      >
+        <circle cx="0" cy="0" r="230" fill="none" stroke="#1B2B5E" strokeWidth="1.5" />
+        {Array.from({ length: 10 }, (_, i) => {
+          const angle = (i / 10) * 180
+          const rx = Math.max(Math.abs(Math.sin((angle * Math.PI) / 180)) * 230, 2)
+          return <ellipse key={i} cx="0" cy="0" rx={rx} ry="230" fill="none" stroke="#1B2B5E" strokeWidth="1" />
+        })}
+        {Array.from({ length: 9 }, (_, i) => {
+          const lat = ((i - 4) / 4) * 210
+          const rx = Math.sqrt(Math.max(0, 230 * 230 - lat * lat))
+          return <ellipse key={i} cx="0" cy={lat} rx={rx} ry={rx * 0.16} fill="none" stroke="#1B2B5E" strokeWidth="1" />
+        })}
+      </motion.svg>
     </div>
   )
 }
@@ -406,6 +431,7 @@ export default function Landing() {
       {/* ── HERO ── */}
       <section ref={heroRef} style={{ backgroundColor: '#F5F0E8', padding: '6rem 1.5rem', overflow: 'hidden', position: 'relative' }}>
         <ParticleBackground />
+        <HeroSphere />
         <div
           style={{
             maxWidth: '780px',
@@ -415,9 +441,13 @@ export default function Landing() {
             willChange: 'transform',
             position: 'relative',
             zIndex: 1,
+            perspective: '1200px',
           }}
         >
-          <h1
+          <motion.h1
+            initial={{ rotateX: -90, opacity: 0, y: 30 }}
+            animate={{ rotateX: 0, opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={{
               fontFamily: 'Playfair Display, serif',
               fontWeight: 700,
@@ -425,12 +455,15 @@ export default function Landing() {
               color: '#1B2B5E',
               lineHeight: 1.15,
               marginBottom: '1rem',
-              animation: 'fadeSlideUp 0.6s ease 0ms both',
+              transformOrigin: 'center top',
             }}
           >
             {t.landing.welcome}
-          </h1>
-          <p
+          </motion.h1>
+          <motion.p
+            initial={{ rotateX: -80, opacity: 0, y: 20 }}
+            animate={{ rotateX: 0, opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={{
               fontFamily: 'Playfair Display, serif',
               fontWeight: 700,
@@ -438,45 +471,51 @@ export default function Landing() {
               color: '#1B2B5E',
               lineHeight: 1.35,
               marginBottom: '1.25rem',
-              animation: 'fadeSlideUp 0.6s ease 150ms both',
+              transformOrigin: 'center top',
             }}
           >
             {t.landing.subtitle}
-          </p>
-          <p
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
             style={{
               fontSize: '0.9rem',
               color: '#888',
               lineHeight: 1.7,
               maxWidth: '560px',
               margin: '0 auto 1.5rem',
-              animation: 'fadeSlideUp 0.6s ease 250ms both',
             }}
           >
             {t.landing.description}
-          </p>
+          </motion.p>
 
           {/* ── COUNTER ── */}
-          <p
+          <motion.p
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.38, type: 'spring', stiffness: 200 }}
             style={{
               fontFamily: 'Playfair Display, serif',
               fontWeight: 700,
               fontSize: '1.1rem',
               color: '#C8102E',
               marginBottom: '2.5rem',
-              animation: 'fadeSlideUp 0.6s ease 350ms both',
             }}
           >
             <CountUp target={234} />+ {lang === 'en' ? 'freelancers trust us' : 'freelances nous font confiance'}
-          </p>
+          </motion.p>
 
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
             style={{
               display: 'flex',
               gap: '1rem',
               justifyContent: 'center',
               flexWrap: 'wrap',
-              animation: 'fadeSlideUp 0.6s ease 450ms both',
             }}
           >
             <button
@@ -495,7 +534,7 @@ export default function Landing() {
             >
               {t.landing.ctaPlans}
             </button>
-          </div>
+          </motion.div>
         </div>
       </section>
 

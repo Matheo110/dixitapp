@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
@@ -10,6 +10,52 @@ export default function Pricing() {
   const [checkoutError, setCheckoutError] = useState(null)
   const navigate = useNavigate()
   const { t, lang } = useLanguage()
+
+  function PricingCard3D({ plan, children }) {
+    const mouseX = useMotionValue(0)
+    const mouseY = useMotionValue(0)
+    const rotateXRaw = useTransform(mouseY, [-100, 100], [10, -10])
+    const rotateYRaw = useTransform(mouseX, [-100, 100], [-10, 10])
+    const rotateX = useSpring(rotateXRaw, { stiffness: 250, damping: 25 })
+    const rotateY = useSpring(rotateYRaw, { stiffness: 250, damping: 25 })
+    const scale = useSpring(1, { stiffness: 300, damping: 25 })
+    const [hovered, setHovered] = useState(false)
+
+    const handleMove = (e) => {
+      const rect = e.currentTarget.getBoundingClientRect()
+      mouseX.set(e.clientX - rect.left - rect.width / 2)
+      mouseY.set(e.clientY - rect.top - rect.height / 2)
+    }
+    const handleEnter = () => { setHovered(true); scale.set(1.03) }
+    const handleLeave = () => { mouseX.set(0); mouseY.set(0); scale.set(1); setHovered(false) }
+
+    return (
+      <motion.div
+        onMouseMove={handleMove}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+        style={{
+          rotateX,
+          rotateY,
+          scale,
+          transformStyle: 'preserve-3d',
+          cursor: 'pointer',
+          border: hovered
+            ? (plan.featured ? '2px solid #C8102E' : '2px solid #1B2B5E')
+            : '1px solid #E0D8CC',
+          boxShadow: hovered
+            ? (plan.featured
+              ? '0 0 0 4px rgba(200,16,46,0.12), 0 24px 64px rgba(27,43,94,0.2)'
+              : '0 0 0 4px rgba(27,43,94,0.08), 0 20px 60px rgba(27,43,94,0.18)')
+            : '0 2px 8px rgba(27,43,94,0.06)',
+          transition: 'border 0.2s, box-shadow 0.2s',
+        }}
+        className="bg-white rounded-2xl p-7 flex flex-col"
+      >
+        {children}
+      </motion.div>
+    )
+  }
 
   const plans = [
     {
@@ -95,24 +141,9 @@ export default function Pricing() {
             <p className="text-center text-sm mb-6" style={{ color: '#C8102E' }}>{checkoutError}</p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ perspective: '1000px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ perspective: '1200px' }}>
             {plans.map(plan => (
-              <motion.div
-                key={plan.key}
-                className="bg-white rounded-2xl p-7 flex flex-col"
-                whileHover={{
-                  y: -8,
-                  rotateX: -2,
-                  rotateY: 2,
-                  boxShadow: '0 0 0 2px #1B2B5E, 0 20px 60px rgba(27,43,94,0.18)',
-                }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                style={{
-                  border: '1px solid #E0D8CC',
-                  transformStyle: 'preserve-3d',
-                  cursor: 'pointer',
-                }}
-              >
+              <PricingCard3D key={plan.key} plan={plan}>
                 {plan.featured && (
                   <div className="mb-4">
                     <span
@@ -190,7 +221,7 @@ export default function Pricing() {
                     {loading === plan.key ? t.pricing.loading : plan.cta}
                   </button>
                 )}
-              </motion.div>
+              </PricingCard3D>
             ))}
           </div>
 

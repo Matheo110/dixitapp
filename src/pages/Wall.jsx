@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLanguage } from '../context/LanguageContext'
@@ -335,6 +336,23 @@ function WallCard({ testimonial, primary, accent, font, index }) {
   const { t } = useLanguage()
   const [filledStars, setFilledStars] = useState(0)
 
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const rotateXRaw = useTransform(mouseY, [-70, 70], [8, -8])
+  const rotateYRaw = useTransform(mouseX, [-70, 70], [-8, 8])
+  const rotateX = useSpring(rotateXRaw, { stiffness: 300, damping: 28 })
+  const rotateY = useSpring(rotateYRaw, { stiffness: 300, damping: 28 })
+
+  const floatAmt = 6 + (index % 4) * 2
+  const floatDuration = 3.2 + (index % 5) * 0.6
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    mouseX.set(e.clientX - rect.left - rect.width / 2)
+    mouseY.set(e.clientY - rect.top - rect.height / 2)
+  }
+  const handleMouseLeave = () => { mouseX.set(0); mouseY.set(0) }
+
   const initials = testimonial.name
     ? testimonial.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '?'
@@ -349,26 +367,27 @@ function WallCard({ testimonial, primary, accent, font, index }) {
   }, [testimonial.rating])
 
   return (
-    <div
+    <motion.div
       className="break-inside-avoid mb-5"
-      style={{ animation: `cardFadeIn 0.5s ease ${index * 100}ms both` }}
+      initial={{ opacity: 0, y: 50, rotateX: -25 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 0.6, delay: Math.min(index * 0.08, 0.6), ease: [0.25, 0.46, 0.45, 0.94] }}
+      style={{ perspective: '1000px' }}
     >
-      <div
+      <motion.div
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        animate={{ y: [0, -floatAmt, 0] }}
+        transition={{ duration: floatDuration, repeat: Infinity, ease: 'easeInOut', delay: index * 0.25 }}
         style={{
+          rotateX,
+          rotateY,
+          transformStyle: 'preserve-3d',
           backgroundColor: '#ffffff',
           borderRadius: '12px',
           padding: '1.5rem',
           boxShadow: '0 4px 20px rgba(27,43,94,0.08)',
           borderTop: `3px solid ${accent}`,
-          transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.boxShadow = '0 8px 32px rgba(27,43,94,0.14)'
-          e.currentTarget.style.transform = 'translateY(-2px)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.boxShadow = '0 4px 20px rgba(27,43,94,0.08)'
-          e.currentTarget.style.transform = 'translateY(0)'
         }}
       >
         {!testimonial.video_url && testimonial.message !== '[Témoignage vidéo]' && (
@@ -453,7 +472,7 @@ function WallCard({ testimonial, primary, accent, font, index }) {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

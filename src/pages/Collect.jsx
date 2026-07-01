@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
@@ -6,6 +7,33 @@ import { useLanguage } from '../context/LanguageContext'
 import { isPro } from '../lib/plan'
 
 const EMPTY = { name: '', message: '', rating: 0 }
+
+function Confetti({ collectAccent }) {
+  const COLORS = [collectAccent, '#1B2B5E', '#FFD700', '#22C55E', '#F5F0E8', '#F59E0B']
+  const pieces = useMemo(() => Array.from({ length: 45 }, (_, i) => ({
+    id: i,
+    x: (Math.random() - 0.5) * 700,
+    y: -(Math.random() * 550 + 80),
+    rotate: Math.random() * 720 - 360,
+    size: Math.random() * 9 + 4,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    delay: Math.random() * 0.45,
+    isCircle: Math.random() > 0.5,
+  })), [])
+  return (
+    <div style={{ position: 'fixed', top: '40%', left: '50%', pointerEvents: 'none', zIndex: 100, overflow: 'visible' }}>
+      {pieces.map(p => (
+        <motion.div
+          key={p.id}
+          initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 0 }}
+          animate={{ x: p.x, y: p.y, opacity: 0, rotate: p.rotate, scale: 1 }}
+          transition={{ duration: 1.6, delay: p.delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{ position: 'absolute', width: p.size, height: p.size, borderRadius: p.isCircle ? '50%' : '2px', backgroundColor: p.color }}
+        />
+      ))}
+    </div>
+  )
+}
 
 const FONT_FAMILY = {
   'Playfair Display': "'Playfair Display', Georgia, serif",
@@ -19,8 +47,14 @@ const inputBase = {
   border: '1.5px solid rgba(27,43,94,0.2)',
   color: '#1B2B5E',
 }
-const onFocus = e => (e.target.style.borderColor = 'rgba(27,43,94,0.5)')
-const onBlur  = e => (e.target.style.borderColor = 'rgba(27,43,94,0.2)')
+const onFocus = e => {
+  e.target.style.borderColor = 'rgba(27,43,94,0.6)'
+  e.target.style.boxShadow = '0 0 0 3px rgba(27,43,94,0.1), 0 0 12px rgba(27,43,94,0.08)'
+}
+const onBlur = e => {
+  e.target.style.borderColor = 'rgba(27,43,94,0.2)'
+  e.target.style.boxShadow = 'none'
+}
 
 export default function Collect() {
   const { slug: token } = useParams()
@@ -258,21 +292,44 @@ export default function Collect() {
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: collectBg }}>
         <Navbar />
+        <Confetti collectAccent={collectAccent} />
         <div className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center max-w-sm">
-            <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.6, type: 'spring', stiffness: 200 }}
+            className="text-center max-w-sm"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 250 }}
               className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-              style={{ backgroundColor: 'rgba(27,43,94,0.08)' }}
+              style={{ backgroundColor: collectAccent }}
             >
-              <svg className="w-8 h-8" style={{ color: '#1B2B5E' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-8 h-8" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-            </div>
-            <h2 className="font-display font-bold text-3xl mb-3" style={{ color: '#1B2B5E' }}>{t.collect.thankYou}</h2>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(27,43,94,0.55)' }}>
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+              className="font-display font-bold text-3xl mb-3"
+              style={{ color: collectPrimary }}
+            >
+              {t.collect.thankYou}
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="text-sm leading-relaxed"
+              style={{ color: `${collectPrimary}88` }}
+            >
               {t.collect.submittedDesc}
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
       </div>
     )
@@ -577,16 +634,17 @@ export default function Collect() {
               )}
 
               {showSubmit && (
-                <button
+                <motion.button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={!loading ? { scale: 1.02, boxShadow: `0 8px 28px ${collectAccent}50` } : {}}
+                  whileTap={!loading ? { scale: 0.96, y: 2, boxShadow: `0 2px 8px ${collectAccent}40` } : {}}
+                  transition={{ duration: 0.15 }}
+                  className="w-full py-3.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: collectAccent }}
-                  onMouseEnter={e => !loading && (e.target.style.opacity = '0.85')}
-                  onMouseLeave={e => (e.target.style.opacity = '1')}
                 >
                   {loading ? t.collect.submitting : t.collect.submit}
-                </button>
+                </motion.button>
               )}
 
             </form>
