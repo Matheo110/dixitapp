@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
@@ -94,29 +95,22 @@ export default function Pricing() {
             <p className="text-center text-sm mb-6" style={{ color: '#C8102E' }}>{checkoutError}</p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ perspective: '1000px' }}>
             {plans.map(plan => (
-              <div
+              <motion.div
                 key={plan.key}
                 className="bg-white rounded-2xl p-7 flex flex-col"
+                whileHover={{
+                  y: -8,
+                  rotateX: -2,
+                  rotateY: 2,
+                  boxShadow: '0 0 0 2px #1B2B5E, 0 20px 60px rgba(27,43,94,0.18)',
+                }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
                 style={{
                   border: '1px solid #E0D8CC',
-                  boxShadow: 'none',
-                  transition: 'all 0.3s ease',
-                  transform: 'translateY(0)',
+                  transformStyle: 'preserve-3d',
                   cursor: 'pointer',
-                  outline: 'none',
-                  outlineOffset: '0px',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-8px)'
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(27,43,94,0.15)'
-                  e.currentTarget.style.outline = '2px solid #1B2B5E'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.outline = 'none'
                 }}
               >
                 {plan.featured && (
@@ -196,7 +190,7 @@ export default function Pricing() {
                     {loading === plan.key ? t.pricing.loading : plan.cta}
                   </button>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
 

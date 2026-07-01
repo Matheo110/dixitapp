@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLanguage } from '../context/LanguageContext'
@@ -120,6 +121,145 @@ const DEMO_EN = [
   { emoji: '⭐', title: 'They testify', desc: 'Your client fills in a simple form in 2 minutes. Written or video, no account needed.' },
   { emoji: '✅', title: 'You publish', desc: 'Approve the testimonial and embed it directly on your website.' },
 ]
+
+function ParticleBackground() {
+  const particles = useMemo(() =>
+    Array.from({ length: 22 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      size: Math.random() * 3 + 2,
+      duration: Math.random() * 8 + 6,
+      delay: Math.random() * 5,
+      yOffset: -(Math.random() * 20 + 10),
+    })), []
+  )
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          animate={{ y: [0, p.yOffset, 0] }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute',
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            width: p.size,
+            height: p.size,
+            borderRadius: '50%',
+            backgroundColor: '#1B2B5E',
+            opacity: 0.12,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function TestimonialCard() {
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const rotateXRaw = useTransform(mouseY, [-100, 100], [10, -10])
+  const rotateYRaw = useTransform(mouseX, [-100, 100], [-10, 10])
+  const rotateX = useSpring(rotateXRaw, { stiffness: 200, damping: 25 })
+  const rotateY = useSpring(rotateYRaw, { stiffness: 200, damping: 25 })
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    mouseX.set(e.clientX - rect.left - rect.width / 2)
+    mouseY.set(e.clientY - rect.top - rect.height / 2)
+  }
+  const handleMouseLeave = () => {
+    mouseX.set(0)
+    mouseY.set(0)
+  }
+
+  return (
+    <div style={{ perspective: '1000px', display: 'flex', justifyContent: 'center', marginTop: '2.5rem' }}>
+      <motion.div
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        animate={{ y: [0, -12, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: 'preserve-3d',
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          padding: '1.75rem 2.25rem',
+          maxWidth: '400px',
+          width: '100%',
+          boxShadow: '0 16px 50px rgba(27,43,94,0.1)',
+          border: '1px solid #E0D8CC',
+          cursor: 'default',
+          userSelect: 'none',
+        }}
+      >
+        <div style={{ fontSize: '1.15rem', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>⭐⭐⭐⭐⭐</div>
+        <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1rem', color: '#1B2B5E', fontWeight: 600, marginBottom: '1.1rem', lineHeight: 1.55, fontStyle: 'italic' }}>
+          "Excellent service, je recommande !"
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', backgroundColor: '#1B2B5E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F5F0E8', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>
+            M
+          </div>
+          <div>
+            <p style={{ fontWeight: 600, color: '#1B2B5E', fontSize: '0.85rem', marginBottom: '0.15rem' }}>Marie L.</p>
+            <p style={{ fontSize: '0.75rem', color: '#888' }}>Freelance Designer · Paris</p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+function StepCard3D({ emoji, title, desc }) {
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const rotateXRaw = useTransform(mouseY, [-80, 80], [8, -8])
+  const rotateYRaw = useTransform(mouseX, [-80, 80], [-8, 8])
+  const rotateX = useSpring(rotateXRaw, { stiffness: 300, damping: 30 })
+  const rotateY = useSpring(rotateYRaw, { stiffness: 300, damping: 30 })
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    mouseX.set(e.clientX - rect.left - rect.width / 2)
+    mouseY.set(e.clientY - rect.top - rect.height / 2)
+  }
+  const handleMouseLeave = () => {
+    mouseX.set(0)
+    mouseY.set(0)
+  }
+
+  return (
+    <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        padding: '2rem 1.5rem',
+        textAlign: 'center',
+        height: '100%',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+        cursor: 'default',
+      }}
+    >
+      <div style={{ fontSize: '2.5rem', marginBottom: '1rem', lineHeight: 1 }}>{emoji}</div>
+      <h3 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', color: '#1B2B5E', marginBottom: '0.6rem' }}>
+        {title}
+      </h3>
+      <p style={{ fontSize: '0.875rem', color: '#666', lineHeight: 1.65 }}>
+        {desc}
+      </p>
+    </motion.div>
+  )
+}
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -264,7 +404,8 @@ export default function Landing() {
       </nav>
 
       {/* ── HERO ── */}
-      <section ref={heroRef} style={{ backgroundColor: '#F5F0E8', padding: '6rem 1.5rem', overflow: 'hidden' }}>
+      <section ref={heroRef} style={{ backgroundColor: '#F5F0E8', padding: '6rem 1.5rem', overflow: 'hidden', position: 'relative' }}>
+        <ParticleBackground />
         <div
           style={{
             maxWidth: '780px',
@@ -272,6 +413,8 @@ export default function Landing() {
             textAlign: 'center',
             transform: `translateY(${parallaxY}px)`,
             willChange: 'transform',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           <h1
@@ -378,6 +521,7 @@ export default function Landing() {
                 </div>
               ))}
             </div>
+            <TestimonialCard />
           </RevealDiv>
         </div>
       </section>
@@ -395,19 +539,11 @@ export default function Landing() {
             <div style={{ width: 40, height: 3, backgroundColor: '#C8102E', borderRadius: '9999px', margin: '0 auto 3.5rem' }} />
           </RevealDiv>
 
-          <div className="demo-row">
+          <div className="demo-row" style={{ perspective: '1000px' }}>
             {(lang === 'en' ? DEMO_EN : DEMO_FR).map((step, i) => (
               <>
                 <RevealDiv key={step.title} delay={i * 180} style={{ flex: 1 }}>
-                  <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '2rem 1.5rem', textAlign: 'center', height: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '1rem', lineHeight: 1 }}>{step.emoji}</div>
-                    <h3 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', color: '#1B2B5E', marginBottom: '0.6rem' }}>
-                      {step.title}
-                    </h3>
-                    <p style={{ fontSize: '0.875rem', color: '#666', lineHeight: 1.65 }}>
-                      {step.desc}
-                    </p>
-                  </div>
+                  <StepCard3D emoji={step.emoji} title={step.title} desc={step.desc} />
                 </RevealDiv>
                 {i < 2 && (
                   <div className="demo-arrow" key={`arrow-${i}`}>→</div>
@@ -431,8 +567,15 @@ export default function Landing() {
           </RevealDiv>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
             {plans.map((plan, i) => (
-              <RevealDiv key={plan.key} delay={i * 150} style={{ height: '100%' }}>
-                <div
+              <RevealDiv key={plan.key} delay={i * 150} style={{ height: '100%', perspective: '1000px' }}>
+                <motion.div
+                  whileHover={{
+                    y: -8,
+                    rotateX: -2,
+                    rotateY: 2,
+                    boxShadow: '0 0 0 2px #1B2B5E, 0 20px 60px rgba(27,43,94,0.18)',
+                  }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
                   style={{
                     height: '100%',
                     backgroundColor: '#ffffff',
@@ -441,20 +584,7 @@ export default function Landing() {
                     display: 'flex',
                     flexDirection: 'column',
                     border: '1px solid #E0D8CC',
-                    boxShadow: 'none',
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease, outline 0.3s ease',
-                    outline: 'none',
-                    outlineOffset: '0px',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'translateY(-8px)'
-                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(27,43,94,0.15)'
-                    e.currentTarget.style.outline = '2px solid #1B2B5E'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.outline = 'none'
+                    transformStyle: 'preserve-3d',
                   }}
                 >
                   {plan.featured && (
@@ -515,7 +645,7 @@ export default function Landing() {
                       {plan.cta}
                     </button>
                   )}
-                </div>
+                </motion.div>
               </RevealDiv>
             ))}
           </div>
