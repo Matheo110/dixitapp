@@ -14,11 +14,49 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
   background-color: #F5F0E8;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+/* Subtle film-grain overlay for a premium, tactile finish */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background-color: #1B2B5E;
+  color: #F5F0E8;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #F5F0E8;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(27, 43, 94, 0.35);
+  border-radius: 999px;
+  border: 2px solid #F5F0E8;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(27, 43, 94, 0.55);
 }
 
 #root {
